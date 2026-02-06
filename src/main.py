@@ -10,7 +10,8 @@ from datetime import datetime
 from pathlib import Path
 
 from comed_api import get_current_price
-from notifier import send_sms, is_quiet_hours
+from notifier import send_sms_to_all, is_quiet_hours
+from tesla_control import start_tesla_charging
 
 
 # State file for tracking last notification
@@ -83,22 +84,28 @@ def main():
         if can_send_notification(state, config["cooldown_minutes"]):
             message = f"⚡ ComEd: {price}¢/kWh - Below {config['price_threshold_alert']}¢!"
             
-            if config["phone_number"]:
-                if send_sms(config["phone_number"], message):
-                    state["last_notification_time"] = time.time()
-                    save_state(state)
-                    print("Alert sent!")
-            else:
-                print("No phone number configured, skipping SMS")
+            sent_count = send_sms_to_all(message)
+            if sent_count > 0:
+                state["last_notification_time"] = time.time()
+                save_state(state)
+                print(f"Alert sent to {sent_count} recipient(s)!")
         else:
             mins_remaining = config["cooldown_minutes"] - ((time.time() - state.get("last_notification_time", 0)) / 60)
             print(f"Cooldown active, {mins_remaining:.1f} minutes remaining")
     
-    # Check if price is below charge threshold (future: Tesla integration)
+    # Check if price is below charge threshold - trigger Tesla charging via IFTTT
     if price <= config["price_threshold_charge"]:
-        print(f"🔋 Price at or below {config['price_threshold_charge']}¢ - would start Tesla charging")
-        # TODO: Add Tesla charging when user is ready
-        # tesla_control.start_charging()
+        # Only trigger if we haven't recently (use same cooldown as notifications)
+        last_charge_time = state.get("last_charge_command_time", 0)
+        charge_cooldown = (time.time() - last_charge_time) / 60 >= config["cooldown_minutes"]
+        
+        if charge_cooldown:
+            print(f"🔋 Price at or below {config['price_threshold_charge']}¢ - triggering Tesla charging")
+            if start_tesla_charging():
+                state["last_charge_command_time"] = time.time()
+                save_state(state)
+        else:
+            print(f"🔋 Price is low, but charge command already sent recently")
     
     print("Done!")
 

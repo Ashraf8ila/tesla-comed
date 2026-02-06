@@ -37,10 +37,12 @@ jobs:
       env:
         GMAIL_USER: ${{ secrets.GMAIL_USER }}
         GMAIL_APP_PASSWORD: ${{ secrets.GMAIL_APP_PASSWORD }}
-        PHONE_NUMBER: ${{ secrets.PHONE_NUMBER }}
+        PHONE_NUMBERS: ${{ secrets.PHONE_NUMBERS }}
         # Default thresholds can be overridden by secrets/vars if desired
         PRICE_THRESHOLD_ALERT: 4.0
         PRICE_THRESHOLD_CHARGE: 2.0
+        # IFTTT for Tesla charging (optional)
+        IFTTT_WEBHOOK_KEY: ${{ secrets.IFTTT_WEBHOOK_KEY }}
       run: python src/main.py
       
     - name: Save state
