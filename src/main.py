@@ -1,6 +1,6 @@
 """
 ComEd Price Monitor - Main Entry Point
-Monitors electricity prices and sends SMS alerts.
+Monitors electricity prices and sends push notifications.
 """
 
 import os
@@ -10,7 +10,7 @@ from datetime import datetime
 from pathlib import Path
 
 from comed_api import get_current_price
-from notifier import send_sms_to_all, is_quiet_hours
+from notifier import send_notification, is_quiet_hours
 from config import PRICE_THRESHOLD_ALERT, PRICE_THRESHOLD_CHARGE, COOLDOWN_MINUTES, TEST_MODE
 
 
@@ -79,14 +79,13 @@ def main():
             status_parts.append(f"PRICE_{price}¢>4¢")
         
         status = " | ".join(status_parts) if status_parts else "ALL_OK"
-        message = f"🧪 TEST: {price}¢/kWh [{status}]"
+        message = f"🧪 TEST: {price}¢/kWh\n[{status}]"
         
         print(f"TEST MODE: Sending regardless of checks")
-        sent_count = send_sms_to_all(message)
-        if sent_count > 0:
+        if send_notification(message, "⚡ ComEd Test"):
             state["last_notification_time"] = time.time()
             save_state(state)
-            print(f"Test alert sent to {sent_count} recipient(s)!")
+            print(f"Test notification sent!")
     else:
         # PRODUCTION MODE: Normal logic
         if quiet:
@@ -95,13 +94,12 @@ def main():
         
         if price < PRICE_THRESHOLD_ALERT:
             if cooldown_ok:
-                message = f"⚡ ComEd: {price}¢/kWh - Below {PRICE_THRESHOLD_ALERT}¢!"
+                message = f"Price dropped to {price}¢/kWh!\nBelow {PRICE_THRESHOLD_ALERT}¢ threshold."
                 
-                sent_count = send_sms_to_all(message)
-                if sent_count > 0:
+                if send_notification(message, "⚡ Low ComEd Price!"):
                     state["last_notification_time"] = time.time()
                     save_state(state)
-                    print(f"Alert sent to {sent_count} recipient(s)!")
+                    print(f"Alert sent!")
             else:
                 elapsed = (time.time() - state.get("last_notification_time", 0)) / 60
                 print(f"Cooldown active, {COOLDOWN_MINUTES - elapsed:.1f} minutes remaining")

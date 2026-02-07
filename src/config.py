@@ -7,20 +7,24 @@ Configuration - Hardcoded for private repo
 # ============================================================
 TEST_MODE = True
 
-# Gmail credentials for sending SMS
+# ntfy.sh topic for push notifications (free, no account needed)
+# All users subscribe to this topic in the ntfy app
+NTFY_TOPIC = "comed-ashraf-alerts"  # Use a unique name!
+
+# Gmail credentials (keeping for backup/SMS fallback)
 GMAIL_USER = "kashrafaliacad@gmail.com"
 GMAIL_APP_PASSWORD = "rubk ihct plcp pauq"
 
-# Phone numbers: (number, gateway)
+# Phone numbers for SMS fallback: (number, gateway)
 PHONE_NUMBERS = [
-    ("7162929592", "tmomail.net"),   # T-Mobile - TESTING
-    # ("6123231366", "tmomail.net"),   # Mint (uses T-Mobile) - UNCOMMENT AFTER TESTING
-    # ("2243587116", "tmomail.net"),   # Red Pocket - UNCOMMENT AFTER TESTING
+    ("7162929592", "tmomail.net"),   # T-Mobile
+    # ("6123231366", "tmomail.net"),   # Mint
+    # ("2243587116", "tmomail.net"),   # Red Pocket
 ]
 
 # Price thresholds
-PRICE_THRESHOLD_ALERT = 99.0 if TEST_MODE else 4.0   # High for testing, 4¢ for production
-PRICE_THRESHOLD_CHARGE = 2.0  # Ideal for Tesla charging (cents)
+PRICE_THRESHOLD_ALERT = 99.0 if TEST_MODE else 4.0   # High for testing
+PRICE_THRESHOLD_CHARGE = 2.0
 
 # Cooldown between notifications (minutes)
 COOLDOWN_MINUTES = 30
