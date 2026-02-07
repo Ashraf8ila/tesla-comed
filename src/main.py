@@ -11,7 +11,6 @@ from pathlib import Path
 
 from comed_api import get_current_price
 from notifier import send_sms_to_all, is_quiet_hours
-from tesla_control import start_tesla_charging
 
 
 # State file for tracking last notification
@@ -93,19 +92,9 @@ def main():
             mins_remaining = config["cooldown_minutes"] - ((time.time() - state.get("last_notification_time", 0)) / 60)
             print(f"Cooldown active, {mins_remaining:.1f} minutes remaining")
     
-    # Check if price is below charge threshold - trigger Tesla charging via IFTTT
+    # Log when price is below charge threshold (Tesla integration can be added later)
     if price <= config["price_threshold_charge"]:
-        # Only trigger if we haven't recently (use same cooldown as notifications)
-        last_charge_time = state.get("last_charge_command_time", 0)
-        charge_cooldown = (time.time() - last_charge_time) / 60 >= config["cooldown_minutes"]
-        
-        if charge_cooldown:
-            print(f"🔋 Price at or below {config['price_threshold_charge']}¢ - triggering Tesla charging")
-            if start_tesla_charging():
-                state["last_charge_command_time"] = time.time()
-                save_state(state)
-        else:
-            print(f"🔋 Price is low, but charge command already sent recently")
+        print(f"🔋 Price at or below {config['price_threshold_charge']}¢ - ideal for Tesla charging!")
     
     print("Done!")
 

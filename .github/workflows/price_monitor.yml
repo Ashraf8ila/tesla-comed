@@ -38,11 +38,13 @@ jobs:
         GMAIL_USER: ${{ secrets.GMAIL_USER }}
         GMAIL_APP_PASSWORD: ${{ secrets.GMAIL_APP_PASSWORD }}
         PHONE_NUMBERS: ${{ secrets.PHONE_NUMBERS }}
-        # Default thresholds can be overridden by secrets/vars if desired
+        # Set timezone to Chicago for accurate quiet hours
+        TZ: America/Chicago
+        # Default thresholds
         PRICE_THRESHOLD_ALERT: 4.0
         PRICE_THRESHOLD_CHARGE: 2.0
-        # IFTTT for Tesla charging (optional)
-        IFTTT_WEBHOOK_KEY: ${{ secrets.IFTTT_WEBHOOK_KEY }}
+        # Reset cooldown for cloud runs (state doesn't persist well)
+        COOLDOWN_MINUTES: 30
       run: python src/main.py
       
     - name: Save state
