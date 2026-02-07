@@ -29,7 +29,7 @@ PRICE_THRESHOLD_ALERT = 4.0   # Send notification when price below this (cents)
 PRICE_THRESHOLD_CHARGE = 2.0  # Start/stop charging threshold (cents)
 
 # Cooldown between production notifications (minutes)
-COOLDOWN_MINUTES = 30
+COOLDOWN_MINUTES = 5
 
 # ============================================================
 # Gmail Credentials
