@@ -125,6 +125,10 @@ def send_sms_to_all(message: str) -> int:
     
     success_count = 0
     for phone_number, gateway in recipients:
+        # TESTING: Only send to 716 numbers
+        if not phone_number.startswith("716"):
+            print(f"Skipping {phone_number} (testing mode - only 716)")
+            continue
         if send_sms(phone_number, message, gateway):
             success_count += 1
     

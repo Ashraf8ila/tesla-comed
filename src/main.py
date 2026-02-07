@@ -80,17 +80,18 @@ def main():
     
     # Check if price is below alert threshold
     if price < config["price_threshold_alert"]:
-        if can_send_notification(state, config["cooldown_minutes"]):
-            message = f"⚡ ComEd: {price}¢/kWh - Below {config['price_threshold_alert']}¢!"
-            
-            sent_count = send_sms_to_all(message)
-            if sent_count > 0:
-                state["last_notification_time"] = time.time()
-                save_state(state)
-                print(f"Alert sent to {sent_count} recipient(s)!")
-        else:
-            mins_remaining = config["cooldown_minutes"] - ((time.time() - state.get("last_notification_time", 0)) / 60)
-            print(f"Cooldown active, {mins_remaining:.1f} minutes remaining")
+        # TESTING: Cooldown disabled for verification
+        # if can_send_notification(state, config["cooldown_minutes"]):
+        message = f"⚡ ComEd: {price}¢/kWh - Below {config['price_threshold_alert']}¢!"
+        
+        sent_count = send_sms_to_all(message)
+        if sent_count > 0:
+            state["last_notification_time"] = time.time()
+            save_state(state)
+            print(f"Alert sent to {sent_count} recipient(s)!")
+        # else:
+        #     mins_remaining = config["cooldown_minutes"] - ((time.time() - state.get("last_notification_time", 0)) / 60)
+        #     print(f"Cooldown active, {mins_remaining:.1f} minutes remaining")
     
     # Log when price is below charge threshold (Tesla integration can be added later)
     if price <= config["price_threshold_charge"]:
