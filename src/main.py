@@ -112,8 +112,11 @@ def main():
     
     # ========================================
     # CHARGE CHANNEL + EMAIL - Crossing 2¢
+    # (Also respects quiet hours)
     # ========================================
-    if below_charge and not charging:
+    if quiet:
+        print("CHARGE: Skipped (quiet hours)")
+    elif below_charge and not charging:
         # Price just dropped to/below charge threshold
         send_start_charge(price)
         state["charging_recommended"] = True
