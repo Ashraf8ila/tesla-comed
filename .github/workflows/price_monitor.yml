@@ -21,37 +21,24 @@ jobs:
         python -m pip install --upgrade pip
         if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
         
-    - name: Restore state
-      uses: actions/cache@v3
+    - name: Download state artifact
+      uses: dawidd6/action-download-artifact@v3
       with:
-        path: state.json
-        # constant key to always restore the same file
-        key: price-monitor-state
-        restore-keys: |
-          price-monitor-state
+        name: price-monitor-state
+        path: .
+        if_no_artifact_found: ignore
+        workflow_conclusion: success
+        search_artifacts: true
 
     - name: Run Price Monitor
       env:
-        GMAIL_USER: ${{ secrets.GMAIL_USER }}
-        GMAIL_APP_PASSWORD: ${{ secrets.GMAIL_APP_PASSWORD }}
-        PHONE_NUMBERS: ${{ secrets.PHONE_NUMBERS }}
-        # Set timezone to Chicago for accurate quiet hours
         TZ: America/Chicago
-        # Default thresholds
-        PRICE_THRESHOLD_ALERT: 4.0
-        PRICE_THRESHOLD_CHARGE: 2.0
-        # Reset cooldown for cloud runs (state doesn't persist well)
-        COOLDOWN_MINUTES: 30
       run: python src/main.py
       
-    - name: Save state
-      if: always()
-      uses: actions/cache@v3
+    - name: Upload state artifact
+      uses: actions/upload-artifact@v4
       with:
+        name: price-monitor-state
         path: state.json
-        key: price-monitor-state
-        # Update cache by using a unique key each time (simulating update)
-        # Note: GitHub Actions cache is immutable, so "updating" is tricky.
-        # Ideally, we'd use an artifact or external storage for true state persistence.
-        # But unrelated caches with same restore-key usually works for simple last-run timestamps.
-      continue-on-error: true
+        overwrite: true
+        retention-days: 7

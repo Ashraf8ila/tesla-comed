@@ -1,10 +1,14 @@
 """
-Notifier - Push notifications via ntfy.sh
-Three channels: TEST, PROD, and CHARGE (for iOS Shortcuts)
+Notifier - Push notifications via ntfy.sh + Email for iOS Shortcuts
 """
 
+import smtplib
 import requests
-from config import NTFY_TOPIC_TEST, NTFY_TOPIC_PROD, NTFY_TOPIC_CHARGE
+from email.mime.text import MIMEText
+from config import (
+    NTFY_TOPIC_TEST, NTFY_TOPIC_PROD, NTFY_TOPIC_CHARGE,
+    GMAIL_USER, GMAIL_APP_PASSWORD, CHARGE_EMAIL_RECIPIENT
+)
 
 
 def send_to_topic(topic: str, message: str, title: str = "ComEd") -> bool:
@@ -16,7 +20,6 @@ def send_to_topic(topic: str, message: str, title: str = "ComEd") -> bool:
     url = f"https://ntfy.sh/{topic}"
     
     try:
-        # Remove emojis from title for header compatibility
         safe_title = title.encode('ascii', 'ignore').decode('ascii') or "ComEd Alert"
         
         response = requests.post(
@@ -42,6 +45,28 @@ def send_to_topic(topic: str, message: str, title: str = "ComEd") -> bool:
         return False
 
 
+def send_email(to_email: str, subject: str, body: str) -> bool:
+    """Send email via Gmail SMTP."""
+    if not GMAIL_USER or not GMAIL_APP_PASSWORD:
+        print("Error: Gmail credentials not configured")
+        return False
+    
+    msg = MIMEText(body)
+    msg["Subject"] = subject
+    msg["From"] = GMAIL_USER
+    msg["To"] = to_email
+    
+    try:
+        with smtplib.SMTP_SSL("smtp.gmail.com", 465) as server:
+            server.login(GMAIL_USER, GMAIL_APP_PASSWORD)
+            server.sendmail(GMAIL_USER, to_email, msg.as_string())
+        print(f"Email sent: {subject} -> {to_email}")
+        return True
+    except smtplib.SMTPException as e:
+        print(f"Failed to send email: {e}")
+        return False
+
+
 def send_test_notification(message: str, title: str = "TEST") -> bool:
     """Send to TEST channel - always sends, for debugging."""
     return send_to_topic(NTFY_TOPIC_TEST, message, title)
@@ -54,20 +79,36 @@ def send_prod_notification(message: str, title: str = "ComEd Alert") -> bool:
 
 def send_start_charge(price: float) -> bool:
     """
-    Send START_CHARGE notification for iOS Shortcuts.
-    Title is exactly "START_CHARGE" for automation matching.
+    Send START_CHARGE via ntfy + email for iOS Shortcuts.
+    Email subject is exactly "START_CHARGE" for automation matching.
     """
     message = f"Price: {price}c/kWh - Good time to charge!"
-    return send_to_topic(NTFY_TOPIC_CHARGE, message, "START_CHARGE")
+    
+    # Send ntfy notification
+    send_to_topic(NTFY_TOPIC_CHARGE, message, "START_CHARGE")
+    
+    # Send email for iOS Shortcuts automation
+    if CHARGE_EMAIL_RECIPIENT:
+        send_email(CHARGE_EMAIL_RECIPIENT, "START_CHARGE", message)
+    
+    return True
 
 
 def send_stop_charge(price: float) -> bool:
     """
-    Send STOP_CHARGE notification for iOS Shortcuts.
-    Title is exactly "STOP_CHARGE" for automation matching.
+    Send STOP_CHARGE via ntfy + email for iOS Shortcuts.
+    Email subject is exactly "STOP_CHARGE" for automation matching.
     """
     message = f"Price: {price}c/kWh - Consider stopping charge."
-    return send_to_topic(NTFY_TOPIC_CHARGE, message, "STOP_CHARGE")
+    
+    # Send ntfy notification
+    send_to_topic(NTFY_TOPIC_CHARGE, message, "STOP_CHARGE")
+    
+    # Send email for iOS Shortcuts automation
+    if CHARGE_EMAIL_RECIPIENT:
+        send_email(CHARGE_EMAIL_RECIPIENT, "STOP_CHARGE", message)
+    
+    return True
 
 
 def is_quiet_hours() -> bool:
@@ -78,6 +119,5 @@ def is_quiet_hours() -> bool:
 
 
 if __name__ == "__main__":
-    print("Testing both channels...")
+    print("Testing notifications...")
     send_test_notification("Test message!", "Test Channel")
-    send_prod_notification("Test message!", "Prod Channel")

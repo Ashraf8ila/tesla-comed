@@ -1,9 +1,10 @@
 """
 ComEd Price Monitor - Main Entry Point
 
-Sends to TWO channels:
-- TEST channel: Always sends (for debugging)
-- PROD channel: Follows rules (threshold, quiet hours, cooldown)
+Channels:
+- TEST: Every run with detailed status (for debugging)
+- PROD: Price alerts under 4¢ (with cooldown, quiet hours)
+- CHARGE: START/STOP when crossing 2¢ threshold
 """
 
 import json
@@ -23,28 +24,34 @@ def load_state() -> dict:
     if STATE_FILE.exists():
         try:
             with open(STATE_FILE) as f:
-                return json.load(f)
-        except (json.JSONDecodeError, IOError):
-            pass
-    return {"last_notification_time": 0}
+                state = json.load(f)
+                print(f"Loaded state: {state}")
+                return state
+        except (json.JSONDecodeError, IOError) as e:
+            print(f"Could not load state: {e}")
+    return {"last_notification_time": 0, "charging_recommended": False}
 
 
 def save_state(state: dict) -> None:
     try:
         with open(STATE_FILE, "w") as f:
             json.dump(state, f)
+        print(f"Saved state: {state}")
     except IOError as e:
         print(f"Warning: Could not save state: {e}")
 
 
-def can_send_notification(state: dict) -> bool:
+def get_cooldown_remaining(state: dict) -> float:
+    """Get minutes remaining in cooldown, or 0 if cooldown passed."""
     last_time = state.get("last_notification_time", 0)
     elapsed_minutes = (time.time() - last_time) / 60
-    return elapsed_minutes >= COOLDOWN_MINUTES
+    remaining = COOLDOWN_MINUTES - elapsed_minutes
+    return max(0, remaining)
 
 
 def main():
-    print(f"[{datetime.now().isoformat()}] ComEd Price Monitor")
+    now = datetime.now()
+    print(f"[{now.isoformat()}] ComEd Price Monitor")
     
     # Fetch current price
     price = get_current_price()
@@ -52,66 +59,76 @@ def main():
         print("Failed to fetch price")
         return
     
-    print(f"Price: {price}¢/kWh | Threshold: {PRICE_THRESHOLD_ALERT}¢")
-    
     state = load_state()
     quiet = is_quiet_hours()
-    cooldown_ok = can_send_notification(state)
-    price_ok = price < PRICE_THRESHOLD_ALERT
+    cooldown_remaining = get_cooldown_remaining(state)
+    cooldown_ok = cooldown_remaining == 0
+    charging = state.get("charging_recommended", False)
+    
+    # Price checks
+    below_alert = price < PRICE_THRESHOLD_ALERT      # < 4¢
+    below_charge = price <= PRICE_THRESHOLD_CHARGE   # <= 2¢
     
     # ========================================
-    # TEST CHANNEL - Always sends with status
+    # TEST CHANNEL - Detailed status every run
     # ========================================
     status_parts = []
     if quiet:
         status_parts.append("QUIET")
     if not cooldown_ok:
-        status_parts.append("COOLDOWN")
-    if not price_ok:
-        status_parts.append(f">{PRICE_THRESHOLD_ALERT}c")
+        status_parts.append(f"CD:{cooldown_remaining:.0f}m")
+    if charging:
+        status_parts.append("CHARGING")
     
-    status = " | ".join(status_parts) if status_parts else "OK"
-    test_msg = f"{price}c/kWh [{status}]"
-    send_test_notification(test_msg, "ComEd Monitor")
+    status = " ".join(status_parts) if status_parts else "OK"
+    
+    # Include all thresholds info
+    test_msg = f"{price}c [{status}]\nAlert<{PRICE_THRESHOLD_ALERT}c Charge<={PRICE_THRESHOLD_CHARGE}c"
+    send_test_notification(test_msg, "Monitor")
+    
+    print(f"Price: {price}c | Alert<{PRICE_THRESHOLD_ALERT}c: {below_alert} | Charge<={PRICE_THRESHOLD_CHARGE}c: {below_charge}")
+    print(f"Quiet: {quiet} | Cooldown OK: {cooldown_ok} ({cooldown_remaining:.1f}m remaining)")
     
     # ========================================
-    # PROD CHANNEL - Follows all rules
+    # PROD CHANNEL - Under 4¢ alerts
     # ========================================
     if quiet:
-        print("Quiet hours - skipping prod notification")
-    elif not price_ok:
-        print(f"Price above threshold - skipping prod notification")
+        print("PROD: Skipped (quiet hours)")
+    elif not below_alert:
+        print(f"PROD: Skipped (price {price}c >= {PRICE_THRESHOLD_ALERT}c)")
     elif not cooldown_ok:
-        elapsed = (time.time() - state.get("last_notification_time", 0)) / 60
-        print(f"Cooldown: {COOLDOWN_MINUTES - elapsed:.1f} min remaining")
+        print(f"PROD: Skipped (cooldown {cooldown_remaining:.1f}m remaining)")
     else:
         # All conditions met - send production alert!
-        prod_msg = f"Price dropped to {price}c/kWh!\nBelow {PRICE_THRESHOLD_ALERT}c threshold."
-        if send_prod_notification(prod_msg, "Low Price Alert"):
+        if below_charge:
+            prod_msg = f"GREAT PRICE: {price}c/kWh!\nIdeal for charging (under {PRICE_THRESHOLD_CHARGE}c)"
+        else:
+            prod_msg = f"Low price: {price}c/kWh\nBelow {PRICE_THRESHOLD_ALERT}c threshold"
+        
+        if send_prod_notification(prod_msg, "ComEd Alert"):
             state["last_notification_time"] = time.time()
             save_state(state)
-            print("Production alert sent!")
+            print("PROD: Alert sent!")
     
     # ========================================
-    # CHARGE CHANNEL - For iOS Shortcuts
+    # CHARGE CHANNEL + EMAIL - Crossing 2¢
     # ========================================
-    was_charging = state.get("charging_recommended", False)
-    should_charge = price <= PRICE_THRESHOLD_CHARGE
-    
-    if should_charge and not was_charging:
-        # Price just dropped below charge threshold - send START
+    if below_charge and not charging:
+        # Price just dropped to/below charge threshold
         send_start_charge(price)
         state["charging_recommended"] = True
         save_state(state)
-        print("START_CHARGE sent!")
-    elif not should_charge and was_charging:
-        # Price just went above charge threshold - send STOP
+        print("CHARGE: START sent!")
+    elif not below_charge and charging:
+        # Price just went above charge threshold
         send_stop_charge(price)
         state["charging_recommended"] = False
         save_state(state)
-        print("STOP_CHARGE sent!")
-    elif should_charge:
-        print(f"Charging recommended (already notified)")
+        print("CHARGE: STOP sent!")
+    elif below_charge:
+        print("CHARGE: Already in charging mode")
+    else:
+        print("CHARGE: Price above threshold, not charging")
     
     print("Done!")
 
