@@ -1,37 +1,29 @@
 """
 Notifier - Push notifications via ntfy.sh
-Free, no account needed, works on iOS and Android.
+Three channels: TEST, PROD, and CHARGE (for iOS Shortcuts)
 """
 
 import requests
-from config import NTFY_TOPIC
+from config import NTFY_TOPIC_TEST, NTFY_TOPIC_PROD, NTFY_TOPIC_CHARGE
 
 
-def send_notification(message: str, title: str = "ComEd Price Alert") -> bool:
-    """
-    Send push notification via ntfy.sh.
-    
-    Args:
-        message: Notification body
-        title: Notification title
-    
-    Returns:
-        True if sent successfully
-    """
-    import base64
-    
-    if not NTFY_TOPIC:
-        print("Error: NTFY_TOPIC not configured")
+def send_to_topic(topic: str, message: str, title: str = "ComEd") -> bool:
+    """Send notification to a specific ntfy.sh topic."""
+    if not topic:
+        print(f"Error: Topic not configured")
         return False
     
-    url = f"https://ntfy.sh/{NTFY_TOPIC}"
+    url = f"https://ntfy.sh/{topic}"
     
     try:
+        # Remove emojis from title for header compatibility
+        safe_title = title.encode('ascii', 'ignore').decode('ascii') or "ComEd Alert"
+        
         response = requests.post(
             url,
             data=message.encode('utf-8'),
             headers={
-                "Title": title.encode('utf-8').decode('latin-1', errors='replace'),
+                "Title": safe_title,
                 "Priority": "high",
                 "Tags": "zap"
             },
@@ -39,15 +31,43 @@ def send_notification(message: str, title: str = "ComEd Price Alert") -> bool:
         )
         
         if response.ok:
-            print(f"Notification sent to ntfy.sh/{NTFY_TOPIC}")
+            print(f"Sent to ntfy.sh/{topic}")
             return True
         else:
-            print(f"ntfy.sh failed: {response.status_code} - {response.text}")
+            print(f"ntfy.sh failed: {response.status_code}")
             return False
             
     except requests.RequestException as e:
-        print(f"Error sending notification: {e}")
+        print(f"Error: {e}")
         return False
+
+
+def send_test_notification(message: str, title: str = "TEST") -> bool:
+    """Send to TEST channel - always sends, for debugging."""
+    return send_to_topic(NTFY_TOPIC_TEST, message, title)
+
+
+def send_prod_notification(message: str, title: str = "ComEd Alert") -> bool:
+    """Send to PRODUCTION channel - for real alerts."""
+    return send_to_topic(NTFY_TOPIC_PROD, message, title)
+
+
+def send_start_charge(price: float) -> bool:
+    """
+    Send START_CHARGE notification for iOS Shortcuts.
+    Title is exactly "START_CHARGE" for automation matching.
+    """
+    message = f"Price: {price}c/kWh - Good time to charge!"
+    return send_to_topic(NTFY_TOPIC_CHARGE, message, "START_CHARGE")
+
+
+def send_stop_charge(price: float) -> bool:
+    """
+    Send STOP_CHARGE notification for iOS Shortcuts.
+    Title is exactly "STOP_CHARGE" for automation matching.
+    """
+    message = f"Price: {price}c/kWh - Consider stopping charge."
+    return send_to_topic(NTFY_TOPIC_CHARGE, message, "STOP_CHARGE")
 
 
 def is_quiet_hours() -> bool:
@@ -58,6 +78,6 @@ def is_quiet_hours() -> bool:
 
 
 if __name__ == "__main__":
-    # Test notification
-    print(f"Testing ntfy.sh topic: {NTFY_TOPIC}")
-    send_notification("Test notification from ComEd monitor!", "Test")
+    print("Testing both channels...")
+    send_test_notification("Test message!", "Test Channel")
+    send_prod_notification("Test message!", "Prod Channel")

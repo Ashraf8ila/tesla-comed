@@ -3,28 +3,30 @@ Configuration - Hardcoded for private repo
 """
 
 # ============================================================
-# TEST MODE - Set to False when done testing
+# ntfy.sh Topics (subscribe in the ntfy app)
 # ============================================================
-TEST_MODE = True
 
-# ntfy.sh topic for push notifications (free, no account needed)
-# All users subscribe to this topic in the ntfy app
-NTFY_TOPIC = "comed-ashraf-alerts"  # Use a unique name!
+# TEST channel - receives ALL runs (for debugging)
+NTFY_TOPIC_TEST = "comed-ashraf-test"
 
-# Gmail credentials (keeping for backup/SMS fallback)
+# PRODUCTION channel - price drop alerts (threshold, quiet hours, cooldown)
+NTFY_TOPIC_PROD = "comed-ashraf-alerts"
+
+# CHARGE channel - for iOS Shortcuts automation
+# Title will be exactly "START_CHARGE" or "STOP_CHARGE"
+NTFY_TOPIC_CHARGE = "comed-ashraf-charge"
+
+# ============================================================
+# Price Thresholds
+# ============================================================
+PRICE_THRESHOLD_ALERT = 4.0   # Send notification when price below this (cents)
+PRICE_THRESHOLD_CHARGE = 2.0  # Ideal for Tesla charging (cents)
+
+# Cooldown between production notifications (minutes)
+COOLDOWN_MINUTES = 30
+
+# ============================================================
+# Gmail (backup - not currently used)
+# ============================================================
 GMAIL_USER = "kashrafaliacad@gmail.com"
 GMAIL_APP_PASSWORD = "rubk ihct plcp pauq"
-
-# Phone numbers for SMS fallback: (number, gateway)
-PHONE_NUMBERS = [
-    ("7162929592", "tmomail.net"),   # T-Mobile
-    # ("6123231366", "tmomail.net"),   # Mint
-    # ("2243587116", "tmomail.net"),   # Red Pocket
-]
-
-# Price thresholds
-PRICE_THRESHOLD_ALERT = 99.0 if TEST_MODE else 4.0   # High for testing
-PRICE_THRESHOLD_CHARGE = 2.0
-
-# Cooldown between notifications (minutes)
-COOLDOWN_MINUTES = 30
