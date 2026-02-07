@@ -11,7 +11,7 @@ from pathlib import Path
 
 from comed_api import get_current_price
 from notifier import send_sms_to_all, is_quiet_hours
-from config import PRICE_THRESHOLD_ALERT, PRICE_THRESHOLD_CHARGE, COOLDOWN_MINUTES
+from config import PRICE_THRESHOLD_ALERT, PRICE_THRESHOLD_CHARGE, COOLDOWN_MINUTES, TEST_MODE
 
 
 # State file for tracking last notification
@@ -49,10 +49,8 @@ def main():
     """Main monitoring loop iteration."""
     print(f"[{datetime.now().isoformat()}] ComEd Price Monitor running...")
     
-    # Check quiet hours (skip if IGNORE_QUIET_HOURS is set)
-    if is_quiet_hours() and not os.environ.get("IGNORE_QUIET_HOURS"):
-        print("Quiet hours (12am-6am) - skipping notifications")
-        return
+    if TEST_MODE:
+        print("⚠️  TEST MODE ENABLED - All checks bypassed")
     
     # Fetch current price
     price = get_current_price()
@@ -65,19 +63,50 @@ def main():
     
     state = load_state()
     
-    # Check if price is below alert threshold
-    if price < PRICE_THRESHOLD_ALERT:
-        # TESTING: Cooldown disabled for verification
-        # if can_send_notification(state):
-        message = f"⚡ ComEd: {price}¢/kWh - Below {PRICE_THRESHOLD_ALERT}¢!"
+    # Build status info for test message
+    quiet = is_quiet_hours()
+    cooldown_ok = can_send_notification(state)
+    price_ok = price < PRICE_THRESHOLD_ALERT
+    
+    # In TEST MODE: Always send, with status info
+    if TEST_MODE:
+        status_parts = []
+        if quiet:
+            status_parts.append("QUIET_HOURS")
+        if not cooldown_ok:
+            status_parts.append("COOLDOWN")
+        if not price_ok:
+            status_parts.append(f"PRICE_{price}¢>4¢")
         
+        status = " | ".join(status_parts) if status_parts else "ALL_OK"
+        message = f"🧪 TEST: {price}¢/kWh [{status}]"
+        
+        print(f"TEST MODE: Sending regardless of checks")
         sent_count = send_sms_to_all(message)
         if sent_count > 0:
             state["last_notification_time"] = time.time()
             save_state(state)
-            print(f"Alert sent to {sent_count} recipient(s)!")
+            print(f"Test alert sent to {sent_count} recipient(s)!")
     else:
-        print(f"Price {price}¢ is above threshold {PRICE_THRESHOLD_ALERT}¢, no alert needed")
+        # PRODUCTION MODE: Normal logic
+        if quiet:
+            print("Quiet hours (12am-6am) - skipping notifications")
+            return
+        
+        if price < PRICE_THRESHOLD_ALERT:
+            if cooldown_ok:
+                message = f"⚡ ComEd: {price}¢/kWh - Below {PRICE_THRESHOLD_ALERT}¢!"
+                
+                sent_count = send_sms_to_all(message)
+                if sent_count > 0:
+                    state["last_notification_time"] = time.time()
+                    save_state(state)
+                    print(f"Alert sent to {sent_count} recipient(s)!")
+            else:
+                elapsed = (time.time() - state.get("last_notification_time", 0)) / 60
+                print(f"Cooldown active, {COOLDOWN_MINUTES - elapsed:.1f} minutes remaining")
+        else:
+            print(f"Price {price}¢ is above threshold {PRICE_THRESHOLD_ALERT}¢, no alert needed")
     
     # Log when price is below charge threshold
     if price <= PRICE_THRESHOLD_CHARGE:
