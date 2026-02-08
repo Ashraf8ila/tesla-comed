@@ -18,9 +18,11 @@ NTFY_TOPIC_CHARGE = "comed-ashraf-charge"
 # ============================================================
 # Email for iOS Shortcuts Automation
 # ============================================================
-# Your friend's email address - they'll receive emails with
-# subject "START_CHARGE" or "STOP_CHARGE" to trigger iOS automation
-CHARGE_EMAIL_RECIPIENT = "kashrafalidev@gmail.com"  # Set this to your friend's email
+# Email addresses to receive START_CHARGE / STOP_CHARGE emails
+CHARGE_EMAIL_RECIPIENTS = [
+    "kashrafalidev@gmail.com",
+    "riazullahm@gmail.com",
+]
 
 # ============================================================
 # Price Thresholds

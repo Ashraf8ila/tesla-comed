@@ -7,7 +7,7 @@ import requests
 from email.mime.text import MIMEText
 from config import (
     NTFY_TOPIC_TEST, NTFY_TOPIC_PROD, NTFY_TOPIC_CHARGE,
-    GMAIL_USER, GMAIL_APP_PASSWORD, CHARGE_EMAIL_RECIPIENT
+    GMAIL_USER, GMAIL_APP_PASSWORD, CHARGE_EMAIL_RECIPIENTS
 )
 
 
@@ -87,9 +87,9 @@ def send_start_charge(price: float) -> bool:
     # Send ntfy notification
     send_to_topic(NTFY_TOPIC_CHARGE, message, "START_CHARGE")
     
-    # Send email for iOS Shortcuts automation
-    if CHARGE_EMAIL_RECIPIENT:
-        send_email(CHARGE_EMAIL_RECIPIENT, "START_CHARGE", message)
+    # Send email to all recipients for iOS Shortcuts automation
+    for email in CHARGE_EMAIL_RECIPIENTS:
+        send_email(email, "START_CHARGE", message)
     
     return True
 
@@ -104,9 +104,9 @@ def send_stop_charge(price: float) -> bool:
     # Send ntfy notification
     send_to_topic(NTFY_TOPIC_CHARGE, message, "STOP_CHARGE")
     
-    # Send email for iOS Shortcuts automation
-    if CHARGE_EMAIL_RECIPIENT:
-        send_email(CHARGE_EMAIL_RECIPIENT, "STOP_CHARGE", message)
+    # Send email to all recipients for iOS Shortcuts automation
+    for email in CHARGE_EMAIL_RECIPIENTS:
+        send_email(email, "STOP_CHARGE", message)
     
     return True
 
