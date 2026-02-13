@@ -27,8 +27,8 @@ CHARGE_EMAIL_RECIPIENTS = [
 # ============================================================
 # Price Thresholds
 # ============================================================
-PRICE_THRESHOLD_ALERT = 4.0   # Send notification when price below this (cents)
-PRICE_THRESHOLD_CHARGE = 0    # Start/stop charging when FREE or negative (0¢ or less)
+PRICE_THRESHOLD_ALERT = 7.0   # Send notification when price below this (cents)
+PRICE_THRESHOLD_CHARGE = 5.0    # Start/stop charging when FREE or negative (0¢ or less)
 
 # Cooldown between production notifications (minutes)
 COOLDOWN_MINUTES = 5
