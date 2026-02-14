@@ -1,0 +1,41 @@
+name: Update Config
+
+on:
+  repository_dispatch:
+    types: [update-config]
+
+permissions:
+  contents: write
+
+jobs:
+  update-config:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v3
+
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.9'
+
+      - name: Update Configuration
+        run: |
+          python scripts/update_config.py \
+            --emails "${{ github.event.client_payload.emails }}" \
+            --alert-threshold "${{ github.event.client_payload.alert_threshold }}" \
+            --charge-threshold "${{ github.event.client_payload.charge_threshold }}"
+
+      - name: Commit and Push Changes
+        run: |
+          git config --global user.name "GitHub Actions"
+          git config --global user.email "actions@github.com"
+          
+          # Check if there are changes
+          if [[ -n $(git status -s) ]]; then
+            git add src/config.py
+            git commit -m "Update config via UI"
+            git push
+          else
+            echo "No changes to commit."
+          fi
