@@ -25,6 +25,7 @@ jobs:
           ADD_EMAIL="${{ github.event.client_payload.add_email }}"
           ALERT_THRESHOLD="${{ github.event.client_payload.alert_threshold }}"
           CHARGE_THRESHOLD="${{ github.event.client_payload.charge_threshold }}"
+          UPDATED_BY="${{ github.event.client_payload.updated_by }}"
           
           ARGS=""
           if [ -n "$ADD_EMAIL" ]; then
@@ -35,6 +36,9 @@ jobs:
           fi
           if [ -n "$CHARGE_THRESHOLD" ]; then
             ARGS="$ARGS --charge-threshold \"$CHARGE_THRESHOLD\""
+          fi
+          if [ -n "$UPDATED_BY" ]; then
+            ARGS="$ARGS --updated-by \"$UPDATED_BY\""
           fi
           
           if [ -n "$ARGS" ]; then
@@ -53,7 +57,7 @@ jobs:
           
           # Check if there are changes
           if [[ -n $(git status -s) ]]; then
-            git add src/config.py
+            git add src/config.py state.json
             git commit -m "Update config via UI"
             git push
           else

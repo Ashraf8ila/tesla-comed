@@ -386,6 +386,12 @@
             const alertThreshold = document.getElementById('alertThreshold').value;
             const chargeThreshold = document.getElementById('chargeThreshold').value;
 
+            // Determine who is making the change
+            let updatedBy = 'Owner (Direct Token)';
+            if (window.securePassword) {
+                updatedBy = window.securePassword;
+            }
+
             document.getElementById('saveBtn').disabled = true;
             document.body.classList.add('loading');
             showStatus('Dispatching update event...', 'success');
@@ -402,7 +408,8 @@
                         client_payload: {
                             add_email: newEmail, // Only sending new email
                             alert_threshold: alertThreshold,
-                            charge_threshold: chargeThreshold
+                            charge_threshold: chargeThreshold,
+                            updated_by: updatedBy
                         }
                     })
                 });
@@ -489,6 +496,7 @@
                     document.getElementById('githubToken').value = token;
                     document.getElementById('decryptModal').style.display = 'none';
 
+                    window.securePassword = password;
                     setSecureMode();
 
                     loadConfig();

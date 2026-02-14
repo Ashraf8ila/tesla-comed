@@ -1,6 +1,9 @@
 import argparse
 import re
 import sys
+import json
+import time
+from datetime import datetime
 from pathlib import Path
 
 def update_config(config_path, key, value, append=False):
@@ -78,33 +81,79 @@ def update_config(config_path, key, value, append=False):
         print(f"Error updating {key}: {e}")
         return False
 
+def update_audit_log(state_path, updated_by, changes):
+    """
+    Updates state.json with an audit log of changes.
+    """
+    try:
+        if state_path.exists():
+            with open(state_path, 'r') as f:
+                state = json.load(f)
+        else:
+            state = {"last_notification_time": 0, "charging_recommended": False}
+
+        if "config_history" not in state:
+            state["config_history"] = []
+
+        log_entry = {
+            "timestamp": datetime.now().isoformat(),
+            "updated_by": updated_by,
+            "changes": changes
+        }
+        
+        state["config_history"].append(log_entry)
+        
+        # Keep only the last 20 entries to avoid file bloat
+        if len(state["config_history"]) > 20:
+             state["config_history"] = state["config_history"][-20:]
+
+        with open(state_path, 'w') as f:
+            json.dump(state, f, indent=4)
+            
+        print("Audit log updated.")
+    
+    except Exception as e:
+        print(f"Failed to update audit log: {e}")
+
 def main():
     parser = argparse.ArgumentParser(description='Update configuration values in src/config.py')
     parser.add_argument('--add-email', help='Single email to add to the list')
     parser.add_argument('--alert-threshold', type=float, help='Price threshold for alerts')
     parser.add_argument('--charge-threshold', type=float, help='Price threshold for charging')
+    parser.add_argument('--updated-by', help='Name/ID of the user making changes')
     
     args = parser.parse_args()
     
     config_path = Path('src/config.py')
+    state_path = Path('state.json')
     
     if not config_path.exists():
         print(f"Error: Config file not found at {config_path}")
         sys.exit(1)
 
     success = True
+    changes = []
     
     if args.add_email:
-        if not update_config(config_path, 'CHARGE_EMAIL_RECIPIENTS', args.add_email, append=True):
-            success = False
+        if update_config(config_path, 'CHARGE_EMAIL_RECIPIENTS', args.add_email, append=True):
+             changes.append(f"Added email: {args.add_email}")
+        else:
+             success = False
 
     if args.alert_threshold is not None:
-        if not update_config(config_path, 'PRICE_THRESHOLD_ALERT', str(args.alert_threshold)):
-            success = False
+        if update_config(config_path, 'PRICE_THRESHOLD_ALERT', str(args.alert_threshold)):
+             changes.append(f"Set Alert Threshold: {args.alert_threshold}")
+        else:
+             success = False
 
     if args.charge_threshold is not None:
-        if not update_config(config_path, 'PRICE_THRESHOLD_CHARGE', str(args.charge_threshold)):
-            success = False
+        if update_config(config_path, 'PRICE_THRESHOLD_CHARGE', str(args.charge_threshold)):
+             changes.append(f"Set Charge Threshold: {args.charge_threshold}")
+        else:
+             success = False
+
+    if changes and args.updated_by:
+        update_audit_log(state_path, args.updated_by, changes)
 
     if not success:
         sys.exit(1)
