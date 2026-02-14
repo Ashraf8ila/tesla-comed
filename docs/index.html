@@ -464,6 +464,21 @@
             }
         }
 
+        function setSecureMode() {
+            // Hide sensitive fields
+            document.getElementById('githubToken').closest('.form-group').style.display = 'none';
+            document.getElementById('emailList').closest('.form-group').querySelector('label').style.display = 'none';
+            document.getElementById('emailList').style.display = 'none';
+            document.getElementById('shareBtn').style.display = 'none';
+
+            // Add a visual indicator
+            const container = document.querySelector('.container');
+            const badge = document.createElement('div');
+            badge.innerHTML = '🔒 Secure Shared Mode';
+            badge.style.cssText = 'background:#e8f5e9; color:#2e7d32; padding:10px; margin-bottom:20px; text-align:center; font-weight:bold; border-radius:4px;';
+            container.insertBefore(badge, container.querySelector('h1').nextSibling);
+        }
+
         async function decryptAndLoad() {
             const password = document.getElementById('decryptPassword').value;
             const encryptedData = window.encryptedTokenData;
@@ -473,6 +488,9 @@
                 if (token) {
                     document.getElementById('githubToken').value = token;
                     document.getElementById('decryptModal').style.display = 'none';
+
+                    setSecureMode();
+
                     loadConfig();
                 }
             } catch (e) {
