@@ -157,11 +157,19 @@
         const REPO_OWNER = 'ashraf8ila';
         const REPO_NAME = 'tesla-comed';
 
-        // Load saved token on startup
+        // Load saved token on startup or from URL
         window.onload = function () {
-            const savedToken = localStorage.getItem('github_pat');
-            if (savedToken) {
-                document.getElementById('githubToken').value = savedToken;
+            const urlParams = new URLSearchParams(window.location.search);
+            const urlToken = urlParams.get('token');
+
+            if (urlToken) {
+                document.getElementById('githubToken').value = urlToken;
+                loadConfig(); // Auto-load if token is in URL
+            } else {
+                const savedToken = localStorage.getItem('github_pat');
+                if (savedToken) {
+                    document.getElementById('githubToken').value = savedToken;
+                }
             }
         }
 
