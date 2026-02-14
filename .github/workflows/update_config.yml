@@ -21,10 +21,30 @@ jobs:
 
       - name: Update Configuration
         run: |
-          python scripts/update_config.py \
-            --emails "${{ github.event.client_payload.emails }}" \
-            --alert-threshold "${{ github.event.client_payload.alert_threshold }}" \
-            --charge-threshold "${{ github.event.client_payload.charge_threshold }}"
+          # Use default empty string if payload is not provided for optional fields
+          ADD_EMAIL="${{ github.event.client_payload.add_email }}"
+          ALERT_THRESHOLD="${{ github.event.client_payload.alert_threshold }}"
+          CHARGE_THRESHOLD="${{ github.event.client_payload.charge_threshold }}"
+          
+          ARGS=""
+          if [ -n "$ADD_EMAIL" ]; then
+            ARGS="$ARGS --add-email \"$ADD_EMAIL\""
+          fi
+          if [ -n "$ALERT_THRESHOLD" ]; then
+            ARGS="$ARGS --alert-threshold \"$ALERT_THRESHOLD\""
+          fi
+          if [ -n "$CHARGE_THRESHOLD" ]; then
+            ARGS="$ARGS --charge-threshold \"$CHARGE_THRESHOLD\""
+          fi
+          
+          if [ -n "$ARGS" ]; then
+            # We must use eval or array to handle quoted arguments properly, 
+            # but for simple python script calls, passing directly works if we are careful.
+            # However, safer to just pass individual flags if they exist.
+            python scripts/update_config.py $ARGS
+          else
+            echo "No arguments to update."
+          fi
 
       - name: Commit and Push Changes
         run: |

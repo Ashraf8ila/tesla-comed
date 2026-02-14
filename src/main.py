@@ -35,7 +35,7 @@ def load_state() -> dict:
 def save_state(state: dict) -> None:
     try:
         with open(STATE_FILE, "w") as f:
-            json.dump(state, f)
+            json.dump(state, f, indent=4)
         print(f"Saved state: {state}")
     except IOError as e:
         print(f"Warning: Could not save state: {e}")

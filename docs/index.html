@@ -112,6 +112,28 @@
             pointer-events: none;
         }
 
+        /* Existing Emails List */
+        .email-list {
+            background: #f8f9fa;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            padding: 10px;
+            margin-bottom: 10px;
+            max-height: 150px;
+            overflow-y: auto;
+        }
+
+        .email-item {
+            padding: 5px;
+            border-bottom: 1px solid #eee;
+            font-size: 14px;
+            color: #555;
+        }
+
+        .email-item:last-child {
+            border-bottom: none;
+        }
+
         /* Modal Styles */
         .modal {
             display: none;
@@ -183,8 +205,16 @@
             <hr style="margin: 30px 0; border: 0; border-top: 1px solid #eee;">
 
             <div class="form-group">
-                <label for="emails">Email Recipients (comma separated)</label>
-                <textarea id="emails"></textarea>
+                <label>Current Email Recipients</label>
+                <div id="emailList" class="email-list">
+                    <!-- Emails populated here -->
+                    <div class="email-item">No emails loaded</div>
+                </div>
+
+                <label for="newEmail" style="margin-top: 15px;">Add New Email</label>
+                <div style="display: flex; gap: 10px;">
+                    <input type="text" id="newEmail" placeholder="user@example.com">
+                </div>
             </div>
 
             <div class="form-group">
@@ -323,7 +353,20 @@
                 const emails = rawList.split(',')
                     .map(s => s.trim().replace(/^['"]|['"]$/g, ''))
                     .filter(s => s);
-                document.getElementById('emails').value = emails.join(', ');
+
+                // Populate read-only list
+                const listEl = document.getElementById('emailList');
+                listEl.innerHTML = '';
+                if (emails.length === 0) {
+                    listEl.innerHTML = '<div class="email-item">No emails configured</div>';
+                } else {
+                    emails.forEach(email => {
+                        const div = document.createElement('div');
+                        div.className = 'email-item';
+                        div.textContent = email;
+                        listEl.appendChild(div);
+                    });
+                }
             }
 
             const alertMatch = text.match(alertRegex);
@@ -339,7 +382,7 @@
 
         async function saveConfig() {
             const token = document.getElementById('githubToken').value.trim();
-            const emails = document.getElementById('emails').value;
+            const newEmail = document.getElementById('newEmail').value.trim();
             const alertThreshold = document.getElementById('alertThreshold').value;
             const chargeThreshold = document.getElementById('chargeThreshold').value;
 
@@ -357,7 +400,7 @@
                     body: JSON.stringify({
                         event_type: 'update-config',
                         client_payload: {
-                            emails: emails,
+                            add_email: newEmail, // Only sending new email
                             alert_threshold: alertThreshold,
                             charge_threshold: chargeThreshold
                         }
@@ -368,7 +411,13 @@
                     throw new Error(`Failed to dispatch event: ${response.statusText}`);
                 }
 
-                showStatus('Update request sent successfully! Check the "Actions" tab in your repo.', 'success');
+                let msg = 'Update request sent! Check your repo Actions.';
+                if (newEmail) {
+                    msg += ' (New email added)';
+                    document.getElementById('newEmail').value = ''; // Clear input on success
+                }
+                showStatus(msg, 'success');
+
             } catch (error) {
                 console.error(error);
                 showStatus(error.message, 'error');

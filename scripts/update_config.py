@@ -3,48 +3,75 @@ import re
 import sys
 from pathlib import Path
 
-def update_config(config_path, key, value):
+def update_config(config_path, key, value, append=False):
     """
     Updates a specific key in the config file with a new value.
     Preserves comments and formatting.
+    If append is True, adds the value to a list instead of replacing it.
     """
     try:
         with open(config_path, 'r') as f:
             content = f.read()
 
-        # Determine the replacement string based on the type of value
         if key == 'CHARGE_EMAIL_RECIPIENTS':
-            # Value is expected to be a list of strings (e.g., "['email1', 'email2']")
-            # We need to format it nicely
-            emails = value.split(',')
-            formatted_emails = '[\n'
-            for email in emails:
-                email = email.strip()
-                if email:
-                    formatted_emails += f'    "{email}",\n'
-            formatted_emails += ']'
-            replacement = f'{key} = {formatted_emails}'
-            
             # Regex for list assignment
             # Matches CHARGE_EMAIL_RECIPIENTS = [ ... ] across multiple lines
-            pattern = r'CHARGE_EMAIL_RECIPIENTS\s*=\s*\[.*?\]'
+            pattern = r'(CHARGE_EMAIL_RECIPIENTS\s*=\s*\[)(.*?)(\])'
+            match = re.search(pattern, content, re.DOTALL)
             
+            if not match:
+                print(f"Error: Could not find key '{key}' in {config_path}")
+                return False
+
+            current_list_str = match.group(2)
+            
+            if append:
+                # Value is a single email to add
+                new_email = value.strip()
+                if not new_email:
+                    print("Error: Empty email provided")
+                    return False
+                
+                # Check if email already exists (simple string check to avoid parsing issues)
+                if f'"{new_email}"' in current_list_str or f"'{new_email}'" in current_list_str:
+                    print(f"Email '{new_email}' already exists. Skipping.")
+                    return True
+                
+                # Append the new email
+                # Check if the list is empty or ends with a comma
+                if current_list_str.strip():
+                    if not current_list_str.strip().rstrip().endswith(','):
+                         extension = f',\n    "{new_email}",\n'
+                    else:
+                         extension = f'\n    "{new_email}",\n'
+                else:
+                    extension = f'\n    "{new_email}",\n'
+                
+                replacement = f'{match.group(1)}{current_list_str}{extension}{match.group(3)}'
+                new_content = content.replace(match.group(0), replacement)
+                
+            else:
+                 # Legacy replace all logic (kept just in case, though UI won't use it)
+                emails = value.split(',')
+                formatted_emails = '[\n'
+                for email in emails:
+                    email = email.strip()
+                    if email:
+                        formatted_emails += f'    "{email}",\n'
+                formatted_emails += ']'
+                replacement = f'{key} = {formatted_emails}'
+                new_content = re.sub(r'CHARGE_EMAIL_RECIPIENTS\s*=\s*\[.*?\]', replacement, content, flags=re.DOTALL)
+
         else:
             # Assume number for thresholds
             replacement = f'{key} = {value}'
             pattern = f'{key}\\s*=\\s*[0-9.]+'
-
-        # Perform the substitution
-        new_content, count = re.subn(pattern, replacement, content, flags=re.DOTALL)
-
-        if count == 0:
-            print(f"Error: Could not find key '{key}' in {config_path}")
-            return False
+            new_content = re.sub(pattern, replacement, content, count=1)
 
         with open(config_path, 'w') as f:
             f.write(new_content)
             
-        print(f"Successfully updated {key} to {value}")
+        print(f"Successfully updated {key}")
         return True
 
     except Exception as e:
@@ -53,7 +80,7 @@ def update_config(config_path, key, value):
 
 def main():
     parser = argparse.ArgumentParser(description='Update configuration values in src/config.py')
-    parser.add_argument('--emails', help='Comma-separated list of emails')
+    parser.add_argument('--add-email', help='Single email to add to the list')
     parser.add_argument('--alert-threshold', type=float, help='Price threshold for alerts')
     parser.add_argument('--charge-threshold', type=float, help='Price threshold for charging')
     
@@ -67,8 +94,8 @@ def main():
 
     success = True
     
-    if args.emails is not None:
-        if not update_config(config_path, 'CHARGE_EMAIL_RECIPIENTS', args.emails):
+    if args.add_email:
+        if not update_config(config_path, 'CHARGE_EMAIL_RECIPIENTS', args.add_email, append=True):
             success = False
 
     if args.alert_threshold is not None:
