@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -13,16 +14,33 @@
             background-color: #f4f4f9;
             color: #333;
         }
-        h1 { text-align: center; color: #2c3e50; }
+
+        h1 {
+            text-align: center;
+            color: #2c3e50;
+        }
+
         .container {
             background-color: white;
             padding: 30px;
             border-radius: 8px;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
         }
-        .form-group { margin-bottom: 20px; }
-        label { display: block; margin-bottom: 8px; font-weight: bold; }
-        input[type="text"], input[type="password"], input[type="number"], textarea {
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: bold;
+        }
+
+        input[type="text"],
+        input[type="password"],
+        input[type="number"],
+        textarea {
             width: 100%;
             padding: 10px;
             border: 1px solid #ddd;
@@ -30,7 +48,12 @@
             box-sizing: border-box;
             font-size: 16px;
         }
-        textarea { height: 100px; font-family: monospace; }
+
+        textarea {
+            height: 100px;
+            font-family: monospace;
+        }
+
         button {
             display: block;
             width: 100%;
@@ -43,183 +66,223 @@
             cursor: pointer;
             transition: background-color 0.3s;
         }
-        button:hover { background-color: #2980b9; }
-        button:disabled { background-color: #bdc3c7; cursor: not-allowed; }
-        .hidden { display: none; }
-        #status { margin-top: 20px; padding: 15px; border-radius: 4px; text-align: center; }
-        .success { background-color: #d4edda; color: #155724; }
-        .error { background-color: #f8d7da; color: #721c24; }
-        .loading { opacity: 0.6; pointer-events: none; }
+
+        button:hover {
+            background-color: #2980b9;
+        }
+
+        button:disabled {
+            background-color: #bdc3c7;
+            cursor: not-allowed;
+        }
+
+        .hidden {
+            display: none;
+        }
+
+        #status {
+            margin-top: 20px;
+            padding: 15px;
+            border-radius: 4px;
+            text-align: center;
+        }
+
+        .success {
+            background-color: #d4edda;
+            color: #155724;
+        }
+
+        .error {
+            background-color: #f8d7da;
+            color: #721c24;
+        }
+
+        .loading {
+            opacity: 0.6;
+            pointer-events: none;
+        }
     </style>
 </head>
+
 <body>
 
-<div class="container">
-    <h1>Tesla-Comed Config</h1>
-
-    <div class="form-group">
-        <label for="githubToken">GitHub Personal Access Token (PAT)</label>
-        <input type="password" id="githubToken" placeholder="ghp_xxxxxxxxxxxxxxxxxxxx">
-        <small style="color: #666;">Needs 'repo' scope access.</small>
-    </div>
-
-    <div class="form-group">
-        <label for="repoOwner">Repo Owner</label>
-        <input type="text" id="repoOwner" value="ashraf8ila">
-    </div>
-
-    <div class="form-group">
-        <label for="repoName">Repo Name</label>
-        <input type="text" id="repoName" value="tesla-comed">
-    </div>
-
-    <button id="loadBtn" onclick="loadConfig()">Load Current Configuration</button>
-
-    <div id="configForm" class="hidden">
-        <hr style="margin: 30px 0; border: 0; border-top: 1px solid #eee;">
-        
-        <div class="form-group">
-            <label for="emails">Email Recipients (comma separated)</label>
-            <textarea id="emails"></textarea>
-        </div>
+    <div class="container">
+        <h1>Tesla-Comed Config</h1>
 
         <div class="form-group">
-            <label for="alertThreshold">Price Threshold Alert (cents)</label>
-            <input type="number" step="0.1" id="alertThreshold">
+            <label for="githubToken">GitHub Personal Access Token (PAT)</label>
+            <input type="password" id="githubToken" placeholder="ghp_xxxxxxxxxxxxxxxxxxxx">
+            <small style="color: #666;">Needs 'repo' scope access.</small>
         </div>
 
-        <div class="form-group">
-            <label for="chargeThreshold">Price Threshold Charge (cents)</label>
-            <input type="number" step="0.1" id="chargeThreshold">
+        <!-- Repo details are hardcoded in the script -->
+        <div class="form-group hidden">
+            <label for="repoOwner">Repo Owner</label>
+            <input type="text" id="repoOwner" value="ashraf8ila">
         </div>
 
-        <button id="saveBtn" onclick="saveConfig()">Save Updates</button>
+        <div class="form-group hidden">
+            <label for="repoName">Repo Name</label>
+            <input type="text" id="repoName" value="tesla-comed">
+        </div>
+
+        <button id="loadBtn" onclick="loadConfig()">Load Current Configuration</button>
+
+        <div id="configForm" class="hidden">
+            <hr style="margin: 30px 0; border: 0; border-top: 1px solid #eee;">
+
+            <div class="form-group">
+                <label for="emails">Email Recipients (comma separated)</label>
+                <textarea id="emails"></textarea>
+            </div>
+
+            <div class="form-group">
+                <label for="alertThreshold">Price Threshold Alert (cents)</label>
+                <input type="number" step="0.1" id="alertThreshold">
+            </div>
+
+            <div class="form-group">
+                <label for="chargeThreshold">Price Threshold Charge (cents)</label>
+                <input type="number" step="0.1" id="chargeThreshold">
+            </div>
+
+            <button id="saveBtn" onclick="saveConfig()">Save Updates</button>
+        </div>
+
+        <div id="status" class="hidden"></div>
     </div>
 
-    <div id="status" class="hidden"></div>
-</div>
+    <script>
+        const CONFIG_PATH = 'src/config.py';
+        const REPO_OWNER = 'ashraf8ila';
+        const REPO_NAME = 'tesla-comed';
 
-<script>
-    const CONFIG_PATH = 'src/config.py';
-
-    function showStatus(message, type) {
-        const el = document.getElementById('status');
-        el.textContent = message;
-        el.className = type;
-        el.style.display = 'block';
-    }
-
-    async function loadConfig() {
-        const token = document.getElementById('githubToken').value;
-        const owner = document.getElementById('repoOwner').value;
-        const repo = document.getElementById('repoName').value;
-
-        if (!token) {
-            showStatus('Please enter a GitHub PAT', 'error');
-            return;
+        // Load saved token on startup
+        window.onload = function () {
+            const savedToken = localStorage.getItem('github_pat');
+            if (savedToken) {
+                document.getElementById('githubToken').value = savedToken;
+            }
         }
 
-        document.getElementById('loadBtn').disabled = true;
-        document.body.classList.add('loading');
-        showStatus('Loading configuration...', 'success'); // using success for neutral info here
+        function showStatus(message, type) {
+            const el = document.getElementById('status');
+            el.textContent = message;
+            el.className = type;
+            el.style.display = 'block';
+        }
 
-        try {
-            const response = await fetch(`https://api.github.com/repos/${owner}/${repo}/contents/${CONFIG_PATH}`, {
-                headers: {
-                    'Authorization': `token ${token}`,
-                    'Accept': 'application/vnd.github.v3.raw'
-                }
-            });
+        async function loadConfig() {
+            const token = document.getElementById('githubToken').value.trim();
 
-            if (!response.ok) {
-                throw new Error(`Failed to fetch config: ${response.statusText}`);
+            if (!token) {
+                showStatus('Please enter a GitHub PAT', 'error');
+                return;
             }
 
-            const text = await response.text();
-            parseConfig(text);
+            // Save token to localStorage
+            localStorage.setItem('github_pat', token);
 
-            document.getElementById('configForm').style.display = 'block';
-            showStatus('Configuration loaded successfully', 'success');
-        } catch (error) {
-            console.error(error);
-            showStatus(error.message, 'error');
-        } finally {
-            document.getElementById('loadBtn').disabled = false;
-            document.body.classList.remove('loading');
-        }
-    }
+            document.getElementById('loadBtn').disabled = true;
+            document.body.classList.add('loading');
+            showStatus('Loading configuration...', 'success');
 
-    function parseConfig(text) {
-        // Simple regex parsing assuming standard python list/variable syntax
-        const emailRegex = /CHARGE_EMAIL_RECIPIENTS\s*=\s*\[(.*?)\]/s;
-        const alertRegex = /PRICE_THRESHOLD_ALERT\s*=\s*([0-9.]+)/;
-        const chargeRegex = /PRICE_THRESHOLD_CHARGE\s*=\s*([0-9.]+)/;
-
-        const emailMatch = text.match(emailRegex);
-        if (emailMatch) {
-            // Clean up the list content: remove quotes, newlines, extra spaces
-            const rawList = emailMatch[1];
-            const emails = rawList.split(',')
-                .map(s => s.trim().replace(/^['"]|['"]$/g, ''))
-                .filter(s => s);
-            document.getElementById('emails').value = emails.join(', ');
-        }
-
-        const alertMatch = text.match(alertRegex);
-        if (alertMatch) {
-            document.getElementById('alertThreshold').value = alertMatch[1];
-        }
-
-        const chargeMatch = text.match(chargeRegex);
-        if (chargeMatch) {
-            document.getElementById('chargeThreshold').value = chargeMatch[1];
-        }
-    }
-
-    async function saveConfig() {
-        const token = document.getElementById('githubToken').value;
-        const owner = document.getElementById('repoOwner').value;
-        const repo = document.getElementById('repoName').value;
-        
-        const emails = document.getElementById('emails').value;
-        const alertThreshold = document.getElementById('alertThreshold').value;
-        const chargeThreshold = document.getElementById('chargeThreshold').value;
-
-        document.getElementById('saveBtn').disabled = true;
-        document.body.classList.add('loading');
-        showStatus('Dispatching update event...', 'success');
-
-        try {
-            const response = await fetch(`https://api.github.com/repos/${owner}/${repo}/dispatches`, {
-                method: 'POST',
-                headers: {
-                    'Authorization': `token ${token}`,
-                    'Accept': 'application/vnd.github.v3+json'
-                },
-                body: JSON.stringify({
-                    event_type: 'update-config',
-                    client_payload: {
-                        emails: emails,
-                        alert_threshold: alertThreshold,
-                        charge_threshold: chargeThreshold
+            try {
+                const response = await fetch(`https://api.github.com/repos/${REPO_OWNER}/${REPO_NAME}/contents/${CONFIG_PATH}`, {
+                    headers: {
+                        'Authorization': `token ${token}`,
+                        'Accept': 'application/vnd.github.v3.raw'
                     }
-                })
-            });
+                });
 
-            if (!response.ok) {
-                throw new Error(`Failed to dispatch event: ${response.statusText}`);
+                if (!response.ok) {
+                    throw new Error(`Failed to fetch config: ${response.statusText}`);
+                }
+
+                const text = await response.text();
+                parseConfig(text);
+
+                document.getElementById('configForm').style.display = 'block';
+                showStatus('Configuration loaded successfully', 'success');
+            } catch (error) {
+                console.error(error);
+                showStatus(error.message, 'error');
+            } finally {
+                document.getElementById('loadBtn').disabled = false;
+                document.body.classList.remove('loading');
+            }
+        }
+
+        function parseConfig(text) {
+            // Simple regex parsing assuming standard python list/variable syntax
+            const emailRegex = /CHARGE_EMAIL_RECIPIENTS\s*=\s*\[(.*?)\]/s;
+            const alertRegex = /PRICE_THRESHOLD_ALERT\s*=\s*([0-9.]+)/;
+            const chargeRegex = /PRICE_THRESHOLD_CHARGE\s*=\s*([0-9.]+)/;
+
+            const emailMatch = text.match(emailRegex);
+            if (emailMatch) {
+                // Clean up the list content: remove quotes, newlines, extra spaces
+                const rawList = emailMatch[1];
+                const emails = rawList.split(',')
+                    .map(s => s.trim().replace(/^['"]|['"]$/g, ''))
+                    .filter(s => s);
+                document.getElementById('emails').value = emails.join(', ');
             }
 
-            showStatus('Update request sent successfully! Check the "Actions" tab in your repo.', 'success');
-        } catch (error) {
-            console.error(error);
-            showStatus(error.message, 'error');
-        } finally {
-            document.getElementById('saveBtn').disabled = false;
-            document.body.classList.remove('loading');
+            const alertMatch = text.match(alertRegex);
+            if (alertMatch) {
+                document.getElementById('alertThreshold').value = alertMatch[1];
+            }
+
+            const chargeMatch = text.match(chargeRegex);
+            if (chargeMatch) {
+                document.getElementById('chargeThreshold').value = chargeMatch[1];
+            }
         }
-    }
-</script>
+
+        async function saveConfig() {
+            const token = document.getElementById('githubToken').value.trim();
+
+            const emails = document.getElementById('emails').value;
+            const alertThreshold = document.getElementById('alertThreshold').value;
+            const chargeThreshold = document.getElementById('chargeThreshold').value;
+
+            document.getElementById('saveBtn').disabled = true;
+            document.body.classList.add('loading');
+            showStatus('Dispatching update event...', 'success');
+
+            try {
+                const response = await fetch(`https://api.github.com/repos/${REPO_OWNER}/${REPO_NAME}/dispatches`, {
+                    method: 'POST',
+                    headers: {
+                        'Authorization': `token ${token}`,
+                        'Accept': 'application/vnd.github.v3+json'
+                    },
+                    body: JSON.stringify({
+                        event_type: 'update-config',
+                        client_payload: {
+                            emails: emails,
+                            alert_threshold: alertThreshold,
+                            charge_threshold: chargeThreshold
+                        }
+                    })
+                });
+
+                if (!response.ok) {
+                    throw new Error(`Failed to dispatch event: ${response.statusText}`);
+                }
+
+                showStatus('Update request sent successfully! Check the "Actions" tab in your repo.', 'success');
+            } catch (error) {
+                console.error(error);
+                showStatus(error.message, 'error');
+            } finally {
+                document.getElementById('saveBtn').disabled = false;
+                document.body.classList.remove('loading');
+            }
+        }
+    </script>
 
 </body>
+
 </html>
