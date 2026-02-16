@@ -119,8 +119,8 @@ def update_audit_log(state_path, updated_by, changes):
 def main():
     parser = argparse.ArgumentParser(description='Update configuration values in src/config.py')
     parser.add_argument('--add-email', help='Single email to add to the list')
-    parser.add_argument('--alert-threshold', type=float, help='Price threshold for alerts')
-    parser.add_argument('--charge-threshold', type=float, help='Price threshold for charging')
+    parser.add_argument('--alert-threshold', help='Price threshold for alerts')
+    parser.add_argument('--charge-threshold', help='Price threshold for charging')
     parser.add_argument('--updated-by', help='Name/ID of the user making changes')
     
     args = parser.parse_args()
@@ -149,16 +149,29 @@ def main():
              success = False
 
     if args.alert_threshold is not None:
-        if update_config(config_path, 'PRICE_THRESHOLD_ALERT', str(args.alert_threshold)):
-             changes.append(f"Set Alert Threshold: {args.alert_threshold}")
-        else:
-             success = False
+        try:
+            # Strip quotes that might be passed by shell
+            val_str = args.alert_threshold.strip('"\'')
+            val = float(val_str)
+            if update_config(config_path, 'PRICE_THRESHOLD_ALERT', str(val)):
+                 changes.append(f"Set Alert Threshold: {val}")
+            else:
+                 success = False
+        except ValueError:
+            print(f"Error: Invalid float value for alert-threshold: {args.alert_threshold}")
+            success = False
 
     if args.charge_threshold is not None:
-        if update_config(config_path, 'PRICE_THRESHOLD_CHARGE', str(args.charge_threshold)):
-             changes.append(f"Set Charge Threshold: {args.charge_threshold}")
-        else:
-             success = False
+        try:
+            val_str = args.charge_threshold.strip('"\'')
+            val = float(val_str)
+            if update_config(config_path, 'PRICE_THRESHOLD_CHARGE', str(val)):
+                 changes.append(f"Set Charge Threshold: {val}")
+            else:
+                 success = False
+        except ValueError:
+            print(f"Error: Invalid float value for charge-threshold: {args.charge_threshold}")
+            success = False
 
     if changes and args.updated_by:
         update_audit_log(state_path, args.updated_by, changes)
