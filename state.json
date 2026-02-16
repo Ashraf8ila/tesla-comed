@@ -1,5 +1,15 @@
 {
     "last_notification_time": 1771281012.6256356,
     "last_charge_command_time": 0,
-    "charging_recommended": false
+    "charging_recommended": false,
+    "config_history": [
+        {
+            "timestamp": "2026-02-16T22:39:06.864030",
+            "updated_by": "Owner (Direct Token)",
+            "changes": [
+                "Set Alert Threshold: 4.0",
+                "Set Charge Threshold: 2.2"
+            ]
+        }
+    ]
 }
