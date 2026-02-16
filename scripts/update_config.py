@@ -1,6 +1,7 @@
 import argparse
 import re
 import sys
+import os
 import json
 import time
 from datetime import datetime
@@ -124,11 +125,18 @@ def main():
     
     args = parser.parse_args()
     
+    print(f"DEBUG: Arguments received: {args}")
+    print(f"DEBUG: CWD: {os.getcwd()}")
+    
     config_path = Path('src/config.py')
     state_path = Path('state.json')
     
     if not config_path.exists():
-        print(f"Error: Config file not found at {config_path}")
+        print(f"Error: Config file not found at {config_path.absolute()}")
+        # List dir to see what's there
+        print(f"DEBUG: Directory contents: {os.listdir('.')}")
+        if Path('src').exists():
+             print(f"DEBUG: src contents: {os.listdir('src')}")
         sys.exit(1)
 
     success = True

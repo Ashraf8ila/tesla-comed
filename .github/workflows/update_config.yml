@@ -27,6 +27,12 @@ jobs:
           CHARGE_THRESHOLD="${{ github.event.client_payload.charge_threshold }}"
           UPDATED_BY="${{ github.event.client_payload.updated_by }}"
           
+          echo "DEBUG: Payload received:"
+          echo "ADD_EMAIL: $ADD_EMAIL"
+          echo "ALERT_THRESHOLD: $ALERT_THRESHOLD"
+          echo "CHARGE_THRESHOLD: $CHARGE_THRESHOLD"
+          echo "UPDATED_BY: $UPDATED_BY"
+          
           ARGS=""
           if [ -n "$ADD_EMAIL" ]; then
             ARGS="$ARGS --add-email \"$ADD_EMAIL\""
