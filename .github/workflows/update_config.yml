@@ -33,25 +33,22 @@ jobs:
           echo "CHARGE_THRESHOLD: $CHARGE_THRESHOLD"
           echo "UPDATED_BY: $UPDATED_BY"
           
-          ARGS=""
+          ARGS=()
           if [ -n "$ADD_EMAIL" ]; then
-            ARGS="$ARGS --add-email \"$ADD_EMAIL\""
+            ARGS+=(--add-email "$ADD_EMAIL")
           fi
           if [ -n "$ALERT_THRESHOLD" ]; then
-            ARGS="$ARGS --alert-threshold \"$ALERT_THRESHOLD\""
+            ARGS+=(--alert-threshold "$ALERT_THRESHOLD")
           fi
           if [ -n "$CHARGE_THRESHOLD" ]; then
-            ARGS="$ARGS --charge-threshold \"$CHARGE_THRESHOLD\""
+            ARGS+=(--charge-threshold "$CHARGE_THRESHOLD")
           fi
           if [ -n "$UPDATED_BY" ]; then
-            ARGS="$ARGS --updated-by \"$UPDATED_BY\""
+            ARGS+=(--updated-by "$UPDATED_BY")
           fi
           
-          if [ -n "$ARGS" ]; then
-            # We must use eval or array to handle quoted arguments properly, 
-            # but for simple python script calls, passing directly works if we are careful.
-            # However, safer to just pass individual flags if they exist.
-            python scripts/update_config.py $ARGS
+          if [ ${#ARGS[@]} -gt 0 ]; then
+            python scripts/update_config.py "${ARGS[@]}"
           else
             echo "No arguments to update."
           fi
