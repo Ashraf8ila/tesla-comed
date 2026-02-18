@@ -204,16 +204,16 @@
         <div id="configForm" class="hidden">
             <hr style="margin: 30px 0; border: 0; border-top: 1px solid #eee;">
 
-            <div class="form-group">
+            <div class="form-group hidden">
                 <label>Current Email Recipients</label>
                 <div id="emailList" class="email-list">
                     <!-- Emails populated here -->
-                    <div class="email-item">No emails loaded</div>
+                    <div class="email-item">Managed via GitHub Secrets</div>
                 </div>
 
                 <label for="newEmail" style="margin-top: 15px;">Add New Email</label>
                 <div style="display: flex; gap: 10px;">
-                    <input type="text" id="newEmail" placeholder="user@example.com">
+                    <input type="text" id="newEmail" placeholder="user@example.com" disabled>
                 </div>
             </div>
 
