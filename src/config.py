@@ -8,22 +8,24 @@ import os
 # ============================================================
 
 # TEST channel - receives ALL runs (for debugging)
-NTFY_TOPIC_TEST = "comed-ashraf-test"
+NTFY_TOPIC_TEST = os.getenv("NTFY_TOPIC_TEST", "comed-ashraf-test")
 
 # PRODUCTION channel - price drop alerts (threshold, quiet hours, cooldown)
-NTFY_TOPIC_PROD = "comed-ashraf-alerts"
+NTFY_TOPIC_PROD = os.getenv("NTFY_TOPIC_PROD", "comed-ashraf-alerts")
 
 # CHARGE channel - for iOS Shortcuts automation
-NTFY_TOPIC_CHARGE = "comed-ashraf-charge"
+NTFY_TOPIC_CHARGE = os.getenv("NTFY_TOPIC_CHARGE", "comed-ashraf-charge")
 
 # ============================================================
 # Email for iOS Shortcuts Automation
 # ============================================================
 # Email addresses to receive START_CHARGE / STOP_CHARGE emails
-CHARGE_EMAIL_RECIPIENTS = [
-    # "kashrafalidev@gmail.com",
-    "riazyusuff@icloud.com",
-]
+# Load from environment variable (comma separated)
+_charge_emails_str = os.getenv("CHARGE_EMAILS", "")
+CHARGE_EMAIL_RECIPIENTS = [e.strip() for e in _charge_emails_str.split(",") if e.strip()]
+if not CHARGE_EMAIL_RECIPIENTS:
+    # Default fallback or empty if strictly using secrets
+    pass
 
 # ============================================================
 # Price Thresholds

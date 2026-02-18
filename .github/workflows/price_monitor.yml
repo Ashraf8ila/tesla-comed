@@ -33,6 +33,7 @@ jobs:
         TZ: America/Chicago
         GMAIL_USER: ${{ secrets.GMAIL_USER }}
         GMAIL_APP_PASSWORD: ${{ secrets.APP_PASSWORD }}
+        CHARGE_EMAILS: ${{ secrets.CHARGE_EMAILS }}
       run: python src/main.py
       
     - name: Commit state changes

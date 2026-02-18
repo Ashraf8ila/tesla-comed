@@ -60,7 +60,17 @@ def send_email(to_email: str, subject: str, body: str) -> bool:
         with smtplib.SMTP_SSL("smtp.gmail.com", 465) as server:
             server.login(GMAIL_USER, GMAIL_APP_PASSWORD)
             server.sendmail(GMAIL_USER, to_email, msg.as_string())
-        print(f"Email sent: {subject} -> {to_email}")
+        
+        # Mask email in logs for privacy
+        masked_email = to_email
+        if "@" in to_email:
+            parts = to_email.split("@")
+            if len(parts[0]) > 3:
+                masked_email = f"{parts[0][:3]}***@{parts[1]}"
+            else:
+                masked_email = f"***@{parts[1]}"
+        
+        print(f"Email sent: {subject} -> {masked_email}")
         return True
     except smtplib.SMTPException as e:
         print(f"Failed to send email: {e}")
