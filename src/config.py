@@ -37,5 +37,5 @@ COOLDOWN_MINUTES = 5
 # ============================================================
 # Gmail Credentials
 # ============================================================
-GMAIL_USER = os.getenv("GMAIL_USER", "kashrafaliacad@gmail.com")
-GMAIL_APP_PASSWORD = os.getenv("GMAIL_APP_PASSWORD", "rubk ihct plcp pauq")
+GMAIL_USER = os.getenv("GMAIL_USER", "YOUR_EMAIL@gmail.com")
+GMAIL_APP_PASSWORD = os.getenv("GMAIL_APP_PASSWORD", "YOUR_APP_PASSWORD")
