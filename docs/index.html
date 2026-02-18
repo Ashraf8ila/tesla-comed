@@ -615,14 +615,16 @@
 
             const price = state.last_detected_price !== undefined ? `${state.last_detected_price}¢` : 'Unknown';
             const priceTime = state.last_price_time ? new Date(state.last_price_time).toLocaleTimeString() : '';
-            const charging = state.charging_recommended ? '<span style="color:green; font-weight:bold">YES</span>' : '<span style="color:#7f8c8d; font-weight:bold">NO</span>';
+            const charging = state.charging_recommended
+                ? '<span style="color:green; font-weight:bold">⚡ CHARGING (Active)</span>'
+                : '<span style="color:#7f8c8d; font-weight:bold">IDLE (Stopped)</span>';
             const lastNotif = state.last_notification_time ? new Date(state.last_notification_time * 1000).toLocaleString() : 'Never';
 
             statusDiv.innerHTML = `
                 <h3 style="margin-top:0; color:#2c3e50;">System Status</h3>
                 <div style="display:grid; grid-template-columns: 1fr 1fr; gap:10px;">
                     <div><strong>Current Price:</strong> <span id="sysPrice">${price}</span> <small style="color:#666" id="sysPriceTime">(${priceTime})</small></div>
-                    <div><strong>Charging Recommended:</strong> ${charging}</div>
+                    <div><strong>Charging State:</strong> ${charging}</div>
                     <div style="grid-column: span 2;"><strong>Last Notification:</strong> ${lastNotif}</div>
                     <div style="grid-column: span 2; margin-top:5px;">
                         <button onclick="checkLivePrice()" style="width:auto; padding:5px 10px; font-size:12px; background:#27ae60;">Check Live Price (ComEd API)</button>
