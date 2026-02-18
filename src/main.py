@@ -9,6 +9,7 @@ Channels:
 
 import json
 import time
+import os
 from datetime import datetime
 from pathlib import Path
 
@@ -17,7 +18,9 @@ from notifier import send_test_notification, send_prod_notification, send_start_
 from config import PRICE_THRESHOLD_ALERT, PRICE_THRESHOLD_CHARGE, COOLDOWN_MINUTES
 
 
-STATE_FILE = Path(__file__).parent.parent / "state.json"
+STATE_FILE = Path(os.getenv("STATE_FILE", str(Path(__file__).parent.parent / "state.json")))
+# Note: For GitHub API in JS, we still assume state.json is at root relative to repo structure.
+# But for python execution, we use STATE_FILE.
 
 
 def load_state() -> dict:

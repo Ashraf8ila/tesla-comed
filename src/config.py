@@ -1,6 +1,7 @@
 """
 Configuration - Hardcoded for private repo
 """
+import os
 
 # ============================================================
 # ntfy.sh Topics (subscribe in the ntfy app)
@@ -36,5 +37,5 @@ COOLDOWN_MINUTES = 5
 # ============================================================
 # Gmail Credentials
 # ============================================================
-GMAIL_USER = "kashrafaliacad@gmail.com"
-GMAIL_APP_PASSWORD = "rubk ihct plcp pauq"
+GMAIL_USER = os.getenv("GMAIL_USER", "kashrafaliacad@gmail.com")
+GMAIL_APP_PASSWORD = os.getenv("GMAIL_APP_PASSWORD", "rubk ihct plcp pauq")
