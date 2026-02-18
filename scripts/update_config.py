@@ -66,6 +66,14 @@ def update_config(config_path, key, value, append=False):
                 replacement = f'{key} = {formatted_emails}'
                 new_content = re.sub(r'CHARGE_EMAIL_RECIPIENTS\s*=\s*\[.*?\]', replacement, content, flags=re.DOTALL)
 
+            new_content = re.sub(pattern, replacement, content, count=1)
+            
+        elif key == 'COOLDOWN_MINUTES':
+            # Handle integer/float for cooldown
+            replacement = f'{key} = {value}'
+            pattern = f'{key}\\s*=\\s*[0-9]+'
+            new_content = re.sub(pattern, replacement, content, count=1)
+            
         else:
             # Assume number for thresholds
             replacement = f'{key} = {value}'
@@ -121,6 +129,7 @@ def main():
     parser.add_argument('--add-email', help='Single email to add to the list')
     parser.add_argument('--alert-threshold', help='Price threshold for alerts')
     parser.add_argument('--charge-threshold', help='Price threshold for charging')
+    parser.add_argument('--cooldown-minutes', help='Minutes to wait between alerts')
     parser.add_argument('--updated-by', help='Name/ID of the user making changes')
     
     args = parser.parse_args()
@@ -171,6 +180,19 @@ def main():
                  success = False
         except ValueError:
             print(f"Error: Invalid float value for charge-threshold: {args.charge_threshold}")
+            print(f"Error: Invalid float value for charge-threshold: {args.charge_threshold}")
+            success = False
+
+    if args.cooldown_minutes is not None:
+        try:
+            val_str = args.cooldown_minutes.strip('"\'')
+            val = int(float(val_str))  # Ensure it's an int
+            if update_config(config_path, 'COOLDOWN_MINUTES', str(val)):
+                changes.append(f"Set Cooldown: {val}m")
+            else:
+                success = False
+        except ValueError:
+            print(f"Error: Invalid value for cooldown-minutes: {args.cooldown_minutes}")
             success = False
 
     if changes and args.updated_by:

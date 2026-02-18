@@ -20,7 +20,7 @@ NTFY_TOPIC_CHARGE = "comed-ashraf-charge"
 # ============================================================
 # Email addresses to receive START_CHARGE / STOP_CHARGE emails
 CHARGE_EMAIL_RECIPIENTS = [
-    "kashrafalidev@gmail.com",
+    # "kashrafalidev@gmail.com",
     "riazyusuff@icloud.com",
 ]
 

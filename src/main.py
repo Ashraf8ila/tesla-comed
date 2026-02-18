@@ -107,8 +107,23 @@ def main():
         
         if send_prod_notification(prod_msg, "ComEd Alert"):
             state["last_notification_time"] = time.time()
+            state["last_detected_price"] = price
+            state["last_price_time"] = datetime.now().isoformat()
             save_state(state)
             print("PROD: Alert sent!")
+    
+    # Always save the latest price even if no alert is sent, so the UI is current
+    if not (below_alert and not cooldown_ok and not quiet): 
+         # Optimization: Don't save on every single skip to reduce IO, 
+         # but for this specific request "current charging status and last detected price",
+         # we probably want it as fresh as possible.
+         # Let's update it at the end of the run regardless of alerts.
+         pass
+
+    # Update state with latest price info regardless of notifications
+    state["last_detected_price"] = price
+    state["last_price_time"] = datetime.now().isoformat()
+    save_state(state)
     
     # ========================================
     # CHARGE CHANNEL + EMAIL - Crossing 2¢
