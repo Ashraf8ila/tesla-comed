@@ -9,8 +9,6 @@ from config import CHARGE_EMAIL_RECIPIENTS
 from notifier import send_email
 
 def main():
-    parser = argparse.add_argument_group('Test Email Options')
-    # Use argparse module properly
     parser = argparse.ArgumentParser(description="Send a test email with the current price.")
     parser.add_argument('--price', type=str, required=True, help="The current price string to include in the email.")
     
