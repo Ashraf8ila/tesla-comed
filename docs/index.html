@@ -626,8 +626,9 @@
                     <div><strong>Current Price:</strong> <span id="sysPrice">${price}</span> <small style="color:#666" id="sysPriceTime">(${priceTime})</small></div>
                     <div><strong>Charging State:</strong> ${charging}</div>
                     <div style="grid-column: span 2;"><strong>Last Notification:</strong> ${lastNotif}</div>
-                    <div style="grid-column: span 2; margin-top:5px;">
+                    <div style="grid-column: span 2; margin-top:5px; display: flex; gap: 10px; align-items: center;">
                         <button onclick="checkLivePrice()" style="width:auto; padding:5px 10px; font-size:12px; background:#27ae60;">Check Live Price (ComEd API)</button>
+                        <button onclick="sendTestEmail()" id="testEmailBtn" style="width:auto; padding:5px 10px; font-size:12px; background:#8e44ad;">Send Test Email</button>
                         <span id="livePriceResult" style="margin-left:10px; font-weight:bold;"></span>
                     </div>
                 </div>
@@ -701,6 +702,61 @@
             } finally {
                 btn.disabled = false;
                 btn.textContent = "Check Live Price (ComEd API)";
+            }
+        }
+
+        // --- Test Email Trigger ---
+        async function sendTestEmail() {
+            const token = document.getElementById('githubToken').value.trim();
+            if (!token) {
+                alert("Please enter a GitHub Token to send emails.");
+                return;
+            }
+
+            // Try to get the live price if available, otherwise fallback to the system price
+            const resultSpan = document.getElementById('livePriceResult').innerText;
+            const sysPriceText = document.getElementById('sysPrice').innerText;
+
+            let currentPrice = sysPriceText.replace('¢', '');
+
+            // Basic parsing if live price is shown (e.g. "Live: 1.5¢ (12:00 PM)")
+            if (resultSpan && resultSpan.includes('Live:')) {
+                const match = resultSpan.match(/Live:\s*([0-9.]+)¢/);
+                if (match) {
+                    currentPrice = match[1];
+                }
+            }
+
+            const btn = document.getElementById('testEmailBtn');
+            const originalText = btn.textContent;
+            btn.disabled = true;
+            btn.textContent = "Sending...";
+
+            try {
+                const response = await fetch(`https://api.github.com/repos/${REPO_OWNER}/${REPO_NAME}/dispatches`, {
+                    method: 'POST',
+                    headers: {
+                        'Authorization': `token ${token}`,
+                        'Accept': 'application/vnd.github.v3+json'
+                    },
+                    body: JSON.stringify({
+                        event_type: 'test-email',
+                        client_payload: {
+                            price: currentPrice
+                        }
+                    })
+                });
+
+                if (!response.ok) {
+                    throw new Error(`Failed to dispatch event: ${response.statusText}`);
+                }
+                alert("Test email command sent! Check your inbox shortly.");
+            } catch (error) {
+                console.error("Test email failed:", error);
+                alert("Failed to send test email: " + error.message);
+            } finally {
+                btn.disabled = false;
+                btn.textContent = originalText;
             }
         }
 

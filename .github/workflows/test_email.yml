@@ -1,0 +1,36 @@
+name: Send Test Email
+
+on:
+  repository_dispatch:
+    types: [test-email]
+
+permissions:
+  contents: read
+
+jobs:
+  send-email:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.10'
+
+      - name: Run Test Email Script
+        run: |
+          PRICE="${{ github.event.client_payload.price }}"
+          echo "Sending test email for price: $PRICE"
+          
+          if [ -n "$PRICE" ]; then
+            python scripts/send_test_email.py --price "$PRICE"
+          else
+            echo "Error: Price payload missing."
+            exit 1
+          fi
+        env:
+          GMAIL_USER: ${{ secrets.GMAIL_USER }}
+          GMAIL_APP_PASSWORD: ${{ secrets.APP_PASSWORD }}
+          CHARGE_EMAILS: ${{ secrets.CHARGE_EMAILS }}
