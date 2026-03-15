@@ -350,8 +350,8 @@
 
         function parseConfig(text) {
             const emailRegex = /CHARGE_EMAIL_RECIPIENTS\s*=\s*\[(.*?)\]/s;
-            const alertRegex = /PRICE_THRESHOLD_ALERT\s*=\s*([0-9.]+)/;
-            const chargeRegex = /PRICE_THRESHOLD_CHARGE\s*=\s*([0-9.]+)/;
+            const alertRegex = /PRICE_THRESHOLD_ALERT\s*=\s*([-0-9.]+)/;
+            const chargeRegex = /PRICE_THRESHOLD_CHARGE\s*=\s*([-0-9.]+)/;
 
             const emailMatch = text.match(emailRegex);
             if (emailMatch) {

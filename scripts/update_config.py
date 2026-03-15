@@ -77,7 +77,7 @@ def update_config(config_path, key, value, append=False):
         else:
             # Assume number for thresholds
             replacement = f'{key} = {value}'
-            pattern = f'{key}\\s*=\\s*[0-9.]+'
+            pattern = f'{key}\\s*=\\s*[-0-9.]+'
             new_content = re.sub(pattern, replacement, content, count=1)
 
         with open(config_path, 'w') as f:
