@@ -84,6 +84,14 @@
                 "Set Alert Threshold: 4.0",
                 "Set Charge Threshold: 1.0"
             ]
+        },
+        {
+            "timestamp": "2026-03-15T17:33:58.477489",
+            "updated_by": "Owner (Direct Token)",
+            "changes": [
+                "Set Alert Threshold: 4.0",
+                "Set Charge Threshold: 0.0"
+            ]
         }
     ]
 }
