@@ -65,7 +65,8 @@ jobs:
           if [[ -n $(git status -s) ]]; then
             git add src/config.py state.json
             git commit -m "Update config via UI"
-            git pull --rebase
+            # Use -X theirs during rebase so our local config changes override remote price updates if they conflict
+            git pull --rebase -X theirs
             git push
           else
             echo "No changes to commit."
