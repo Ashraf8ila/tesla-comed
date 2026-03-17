@@ -290,7 +290,7 @@
             } else if (encryptedData) {
                 // Encrypted token - show decrypt modal
                 document.getElementById('decryptModal').style.display = 'block';
-                window.encryptedTokenData = encryptedData;
+                window.encryptedTokenData = encryptedData.replace(/ /g, '+');
             } else {
                 // Check local storage
                 const savedToken = localStorage.getItem('github_pat');
