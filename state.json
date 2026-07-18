@@ -158,11 +158,11 @@
             ]
         },
         {
-            "timestamp": "2026-07-18T15:13:48.522044",
+            "timestamp": "2026-07-18T15:13:53.444714",
             "updated_by": "riazyusuff@icloud.com",
             "changes": [
                 "Set Alert Threshold: 4.0",
-                "Set Charge Threshold: 8.5"
+                "Set Charge Threshold: 8.0"
             ]
         }
     ]
