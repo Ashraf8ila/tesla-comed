@@ -6,14 +6,6 @@
     "last_price_time": "2026-07-27T15:30:29.173678",
     "config_history": [
         {
-            "timestamp": "2026-07-17T02:25:32.922401",
-            "updated_by": "riazyusuff@icloud.com",
-            "changes": [
-                "Set Alert Threshold: 4.0",
-                "Set Charge Threshold: 3.0"
-            ]
-        },
-        {
             "timestamp": "2026-07-17T02:28:33.553607",
             "updated_by": "riazyusuff@icloud.com",
             "changes": [
@@ -163,6 +155,14 @@
             "changes": [
                 "Set Alert Threshold: 4.0",
                 "Set Charge Threshold: 6.0"
+            ]
+        },
+        {
+            "timestamp": "2026-07-27T20:33:12.598330",
+            "updated_by": "riazyusuff@icloud.com",
+            "changes": [
+                "Set Alert Threshold: 4.0",
+                "Set Charge Threshold: 3.0"
             ]
         }
     ]
