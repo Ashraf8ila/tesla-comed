@@ -122,10 +122,11 @@ def send_stop_charge(price: float) -> bool:
 
 
 def is_quiet_hours() -> bool:
-    """Check if current time is within quiet hours (12am-6am)."""
-    from datetime import datetime
-    current_hour = datetime.now().hour
-    return 0 <= current_hour < 6
+    """Check if current time is within quiet hours (12am-6am). Disabled by returning False."""
+    # from datetime import datetime
+    # current_hour = datetime.now().hour
+    # return 0 <= current_hour < 6
+    return False
 
 
 if __name__ == "__main__":
