@@ -244,16 +244,22 @@
         <div class="modal-content">
             <span class="close" onclick="closeShareModal()">&times;</span>
             <h2>Secure Share</h2>
-            <p>Encrypt your token with a password and generate a shareable link.</p>
+            <p>Generate a shareable link with or without a password prompt.</p>
             <div class="form-group">
-                <label for="sharePassword">Encryption Password</label>
-                <input type="password" id="sharePassword" placeholder="Enter a strong password">
+                <label for="shareUserLabel">Recipient Name / Email (for audit log)</label>
+                <input type="text" id="shareUserLabel" placeholder="e.g. friend@example.com or Alex">
+                <small style="color: #666;">Tracks who updated the price in the history log.</small>
+            </div>
+            <div class="form-group">
+                <label for="sharePassword">Encryption Password (Optional)</label>
+                <input type="password" id="sharePassword" placeholder="Leave blank for a no-password link">
+                <small style="color: #666;">Leave blank so the link opens directly without asking for a password.</small>
             </div>
             <button onclick="generateSecureLink()">Generate Link</button>
             <div id="shareResult" class="hidden" style="margin-top: 15px;">
                 <label>Shareable Link:</label>
                 <textarea id="shareLink" readonly style="height: 60px; font-size: 12px;"></textarea>
-                <small>Send this link AND the password to the recipient.</small>
+                <small id="shareHint">Send this link to the recipient.</small>
             </div>
         </div>
     </div>
@@ -276,21 +282,48 @@
         const CONFIG_PATH = 'src/config.py';
         const REPO_OWNER = 'ashraf8ila';
         const REPO_NAME = 'tesla-comed';
+        const DEFAULT_AUTO_KEY = 'tesla-comed-direct-share-v1';
 
         // --- Initialization ---
         window.onload = async function () {
             const urlParams = new URLSearchParams(window.location.search);
             const urlToken = urlParams.get('token');
             const encryptedData = urlParams.get('encrypted');
+            const autoData = urlParams.get('auto');
+            const urlUser = urlParams.get('user');
 
             if (urlToken) {
                 // Direct token (legacy/insecure)
                 document.getElementById('githubToken').value = urlToken;
                 loadConfig();
+            } else if (autoData) {
+                // Passwordless encrypted share link - auto-unlock
+                try {
+                    const decryptedStr = await decryptToken(autoData.replace(/ /g, '+'), DEFAULT_AUTO_KEY);
+                    let token = decryptedStr;
+                    let userLabel = urlUser || 'Shared Link (No Password)';
+                    try {
+                        const parsed = JSON.parse(decryptedStr);
+                        if (parsed && parsed.token) {
+                            token = parsed.token;
+                            if (parsed.user) userLabel = parsed.user;
+                        }
+                    } catch (e) {}
+                    document.getElementById('githubToken').value = token;
+                    window.securePassword = userLabel;
+                    setSecureMode();
+                    loadConfig();
+                } catch (e) {
+                    console.error(e);
+                    showStatus('Invalid or corrupted share link.', 'error');
+                }
             } else if (encryptedData) {
                 // Encrypted token - show decrypt modal
                 document.getElementById('decryptModal').style.display = 'block';
                 window.encryptedTokenData = encryptedData.replace(/ /g, '+');
+                if (urlUser) {
+                    window.urlUserLabel = urlUser;
+                }
             } else {
                 // Check local storage
                 const savedToken = localStorage.getItem('github_pat');
@@ -472,17 +505,33 @@
 
         async function generateSecureLink() {
             const token = document.getElementById('githubToken').value.trim();
+            const userLabel = document.getElementById('shareUserLabel').value.trim();
             const password = document.getElementById('sharePassword').value;
-
-            if (!password) {
-                alert("Please enter a password.");
-                return;
-            }
+            const baseUrl = window.location.href.split('?')[0];
+            const hintEl = document.getElementById('shareHint');
 
             try {
-                const encryptedData = await encryptToken(token, password);
-                const baseUrl = window.location.href.split('?')[0];
-                const link = `${baseUrl}?encrypted=${encodeURIComponent(encryptedData)}`;
+                let link;
+                if (password) {
+                    const encryptedData = await encryptToken(token, password);
+                    link = `${baseUrl}?encrypted=${encodeURIComponent(encryptedData)}`;
+                    if (userLabel) {
+                        link += `&user=${encodeURIComponent(userLabel)}`;
+                    }
+                    if (hintEl) {
+                        hintEl.textContent = 'Send this link AND the password to the recipient.';
+                    }
+                } else {
+                    const payload = JSON.stringify({
+                        token: token,
+                        user: userLabel || 'Shared Link (No Password)'
+                    });
+                    const encryptedData = await encryptToken(payload, DEFAULT_AUTO_KEY);
+                    link = `${baseUrl}?auto=${encodeURIComponent(encryptedData)}`;
+                    if (hintEl) {
+                        hintEl.textContent = 'No password required! Anyone with this link can open and update the config directly.';
+                    }
+                }
 
                 document.getElementById('shareLink').value = link;
                 document.getElementById('shareResult').style.display = 'block';
@@ -499,12 +548,15 @@
             document.getElementById('emailList').style.display = 'none';
             document.getElementById('shareBtn').style.display = 'none';
 
-            // Add a visual indicator
-            const container = document.querySelector('.container');
-            const badge = document.createElement('div');
-            badge.innerHTML = '🔒 Secure Shared Mode';
-            badge.style.cssText = 'background:#e8f5e9; color:#2e7d32; padding:10px; margin-bottom:20px; text-align:center; font-weight:bold; border-radius:4px;';
-            container.insertBefore(badge, container.querySelector('h1').nextSibling);
+            // Add a visual indicator if not already present
+            if (!document.getElementById('secureModeBadge')) {
+                const container = document.querySelector('.container');
+                const badge = document.createElement('div');
+                badge.id = 'secureModeBadge';
+                badge.innerHTML = '🔒 Secure Shared Mode';
+                badge.style.cssText = 'background:#e8f5e9; color:#2e7d32; padding:10px; margin-bottom:20px; text-align:center; font-weight:bold; border-radius:4px;';
+                container.insertBefore(badge, container.querySelector('h1').nextSibling);
+            }
         }
 
         async function decryptAndLoad() {
@@ -517,7 +569,7 @@
                     document.getElementById('githubToken').value = token;
                     document.getElementById('decryptModal').style.display = 'none';
 
-                    window.securePassword = password;
+                    window.securePassword = window.urlUserLabel || password;
                     setSecureMode();
 
                     loadConfig();
