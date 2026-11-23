@@ -1,9 +1,9 @@
 {
-    "last_notification_time": 1795409716.507267,
+    "last_notification_time": 1795410021.2601862,
     "last_charge_command_time": 0,
     "charging_recommended": false,
-    "last_detected_price": 1.1,
-    "last_price_time": "2026-11-22T22:55:16.507653",
+    "last_detected_price": 1.2,
+    "last_price_time": "2026-11-22T23:00:21.260473",
     "config_history": [
         {
             "timestamp": "2026-10-14T11:50:06.943896",
